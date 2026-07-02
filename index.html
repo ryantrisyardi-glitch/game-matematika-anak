@@ -5,6 +5,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Game Matematika Anak</title>
+
+  <!-- ===== PWA ===== -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0a2e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MatikaKu">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- ===== UMAMI ANALYTICS ===== -->
+  <!-- GANTI "GANTI-DENGAN-WEBSITE-ID-KAMU" dengan Website ID dari dashboard Umami Cloud kamu -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="eeb618bf-8df2-484e-97cf-46c031cba5bc"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -1047,6 +1061,39 @@
     };
     let bgMusic = null, playerName = '';
 
+    // ============================================================
+    // ANALYTICS (Umami) - helper aman, tidak akan error kalau
+    // script Umami diblokir adblock / belum sempat load
+    // ============================================================
+    function trackEvent(name, data) {
+      try {
+        if (window.umami && typeof window.umami.track === 'function') {
+          window.umami.track(name, data || {});
+        }
+      } catch (e) { /* diamkan, jangan sampai mengganggu game */ }
+    }
+
+    // Ubah nama pemain jadi ID pendek yang TIDAK bisa dibalik ke nama asli.
+    // Tujuannya: sesi yang sama (nama sama) bisa dikenali/dikelompokkan di
+    // dashboard Umami, tanpa menyimpan nama anak sungguhan di analytics.
+    function buatPlayerId(nama) {
+      const str = nama.trim().toLowerCase();
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return 'p' + Math.abs(hash).toString(36);
+    }
+
+    function identifyPlayer(nama) {
+      try {
+        if (window.umami && typeof window.umami.identify === 'function') {
+          window.umami.identify(buatPlayerId(nama));
+        }
+      } catch (e) { /* diamkan */ }
+    }
+
     function rndFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     function playSound(urlArr, vol = 1.0, onended = null) {
       const url = Array.isArray(urlArr) ? rndFrom(urlArr) : urlArr;
@@ -1062,8 +1109,19 @@
     function playCorrect() { playSound(AUDIO.correct, 0.9); }
     function playError() { playSound(AUDIO.error, 0.9); }
     function playResult(score, total) {
+      trackEvent('hasil_game', {
+        level: currentLevel,
+        method: currentMethod,
+        skor: score,
+        total: total,
+        persen: total ? Math.round((score / total) * 100) : 0
+      });
       const sfx = (score / total) >= 0.7 ? AUDIO.goodResult : AUDIO.badResult;
-      playSound(sfx, 0.9, () => playSound(AUDIO.ending, 0.9));
+      playSound(sfx, 0.9, () => {
+        playSound(AUDIO.ending, 0.9, () => {
+          playSound(AUDIO.mainlagisound, 0.9);
+        });
+      });
     }
 
     // ============================================================
@@ -1290,6 +1348,8 @@
       const val = document.getElementById('input-nama').value.trim();
       if (!val) { showToast('Masukkan namamu dulu! 😊', 'red'); return; }
       playerName = val;
+      identifyPlayer(playerName);
+      trackEvent('mulai_main');
       startBgMusic();
       // Simpan instance audio ke dalam variabel
       const welcomeAudio = playSound(AUDIO.welcome, 0.9);
@@ -1305,6 +1365,7 @@
     }
     function pilihLevel(lv) {
       currentLevel = lv;
+      trackEvent('pilih_level', { level: lv });
       if (lv === 1) {
         showScreen('screen-method');
       } else if (lv === 4) {
@@ -1320,6 +1381,7 @@
       currentSoal = 0; score = 0; waitingNext = false;
       soalList = buatSoal(lv, method);
       totalSoal = soalList.length;
+      trackEvent('mulai_game', { level: lv, method: method });
       document.getElementById('info-level').textContent = namaLevel(lv);
       showScreen('screen-game');
       tampilSoal();
@@ -1330,8 +1392,8 @@
     }
     function kembaliDariGame() { currentLevel === 1 ? showScreen('screen-method') : showScreen('screen-level'); }
     function mainLagi() {
+      trackEvent('main_lagi', { level: currentLevel, method: currentMethod });
       mulaiGame(currentLevel, currentMethod);
-      playSound(AUDIO.mainlagisound, 0.9);
     }
     function namaLevel(lv) { return ['', 'Level Pemula', 'Level Menengah', 'Menengah Atas', 'Level Atas'][lv]; }
 
@@ -1888,6 +1950,7 @@
     }
 
     async function bukaShare() {
+      trackEvent('bagikan_hasil', { level: currentLevel, method: currentMethod });
       const btn = document.querySelector('.btn-share');
       const origHTML = btn ? btn.innerHTML : '';
       if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Menyiapkan...'; }
@@ -1971,6 +2034,15 @@
         if (active?.id === 'screen-intro') submitNama();
       }
     });
+
+    // ============================================================
+    // PWA - Registrasi Service Worker
+    // ============================================================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { });
+      });
+    }
   </script>
 </body>
 
