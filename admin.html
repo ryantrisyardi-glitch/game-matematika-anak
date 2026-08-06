@@ -38,10 +38,7 @@
       text-align: center;
     }
 
-    .login-card h1 {
-      font-size: 1.3rem;
-      margin-bottom: 6px;
-    }
+    .login-card h1 { font-size: 1.3rem; margin-bottom: 6px; }
 
     .login-card p.sub {
       font-size: 0.85rem;
@@ -53,6 +50,8 @@
     input[type="password"],
     input[type="date"],
     input[type="time"],
+    input[type="week"],
+    input[type="month"],
     select {
       width: 100%;
       padding: 12px 14px;
@@ -64,6 +63,14 @@
       margin-bottom: 12px;
       outline: none;
       font-family: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    /* FIX: teks dropdown (opsi) supaya terbaca, jangan putih di atas putih */
+    select option {
+      color: #1a1a2e;
+      background: #ffffff;
     }
 
     input:focus, select:focus { border-color: #FFD93D; }
@@ -82,6 +89,40 @@
 
     .btn:active { transform: scale(0.98); }
 
+    .btn-google {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #fff;
+      color: #1a1a2e;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .btn-google:active { transform: scale(0.98); }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.75rem;
+      margin: 14px 0;
+    }
+    .login-divider::before, .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.15);
+    }
+
     .error-msg {
       color: #FF6B6B;
       font-size: 0.85rem;
@@ -98,7 +139,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 18px;
+      margin-bottom: 22px;
     }
 
     .dash-header h1 { font-size: 1.2rem; margin: 0; }
@@ -114,6 +155,18 @@
       font-size: 0.85rem;
     }
 
+    .section-title {
+      font-size: 1.02rem;
+      color: #FFD93D;
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-block { margin-bottom: 34px; }
+
+    /* ===== FILTER BAR (dipakai 2x: periode analisa & log kunjungan) ===== */
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
@@ -123,10 +176,10 @@
       border: 1px solid rgba(255,255,255,0.14);
       border-radius: 16px;
       padding: 14px 16px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
-    .filter-item { display: flex; flex-direction: column; min-width: 140px; }
+    .filter-item { display: flex; flex-direction: column; min-width: 140px; flex: 1; }
     .filter-item label { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
     .filter-item input, .filter-item select { margin-bottom: 0; }
 
@@ -140,6 +193,13 @@
       cursor: pointer;
       font-size: 0.9rem;
       white-space: nowrap;
+      height: 42px;
+    }
+
+    .filter-note {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      margin: -10px 0 16px 2px;
     }
 
     .cards-grid {
@@ -161,7 +221,7 @@
 
     .grid-2 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 16px;
       margin-bottom: 22px;
     }
@@ -183,7 +243,7 @@
       font-size: 0.8rem;
     }
 
-    .bar-row .b-label { width: 90px; flex-shrink: 0; color: rgba(255,255,255,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-row .b-label { width: 100px; flex-shrink: 0; color: rgba(255,255,255,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bar-row .b-track { flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
     .bar-row .b-fill { height: 100%; background: linear-gradient(90deg, #6BCB77, #4D96FF); border-radius: 6px; }
     .bar-row .b-count { width: 34px; text-align: right; flex-shrink: 0; color: rgba(255,255,255,0.6); }
@@ -230,8 +290,25 @@
     .table-wrap { overflow-x: auto; }
 
     .loading-text { text-align: center; padding: 30px; color: rgba(255,255,255,0.5); font-size: 0.9rem; }
-
     .empty-text { text-align: center; padding: 24px; color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 640px) {
+      #dash-screen { padding: 14px 10px 50px; }
+      .dash-header { flex-direction: column; align-items: flex-start; }
+      .filter-bar { flex-direction: column; align-items: stretch; padding: 12px; }
+      .filter-item { min-width: 100%; }
+      .btn-apply { width: 100%; }
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-card .snum { font-size: 1.4rem; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .bar-row .b-label { width: 80px; font-size: 0.75rem; }
+      .hours-grid { grid-template-columns: repeat(12, 1fr); height: 70px; }
+      .hour-label { display: none; }
+      table { font-size: 0.74rem; }
+      thead th, tbody td { padding: 7px 6px; }
+      .section-title { font-size: 0.92rem; }
+    }
   </style>
 </head>
 
@@ -242,6 +319,19 @@
     <div class="login-card">
       <h1>🔐 Admin Dashboard</h1>
       <p class="sub">Game Matematika Anak — khusus Superadmin</p>
+
+      <button class="btn-google" onclick="doLoginGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34 5.4 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-4z" />
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.4 18.9 12.5 24 12.5c3.1 0 5.8 1.1 8 3l6-6C34 5.4 29.3 3 24 3c-7.4 0-13.8 4-17.2 10.2z" />
+          <path fill="#4CAF50" d="M24 45c5.2 0 9.9-2 13.4-5.2l-6.2-5.1C29.2 36.4 26.7 37 24 37c-5.3 0-9.7-3.4-11.3-8l-6.5 5c3.3 6.2 9.7 10 17.8 10.5z" />
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.9 2.5-2.5 4.6-4.6 6.1l6.2 5.1C39.9 37 44 31.1 44 24c0-1.4-.1-2.7-.4-3.5z" />
+        </svg>
+        Masuk dengan Google
+      </button>
+
+      <div class="login-divider">atau pakai email &amp; password</div>
+
       <input type="email" id="login-email" placeholder="Email" autocomplete="username">
       <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
       <button class="btn" onclick="doLogin()">Masuk</button>
@@ -259,36 +349,73 @@
       <button class="btn-logout" onclick="doLogout()">Keluar</button>
     </div>
 
-    <div class="filter-bar">
-      <div class="filter-item">
-        <label>Tipe Pengunjung</label>
-        <select id="f-type">
-          <option value="all">Semua</option>
-          <option value="guest">Hanya Tamu</option>
-          <option value="admin">Hanya Admin</option>
-        </select>
+    <!-- ===== SECTION 1: ANALISA & RINGKASAN ===== -->
+    <div class="section-block">
+      <h2 class="section-title">📈 Analisa &amp; Ringkasan</h2>
+
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label>Periode</label>
+          <select id="p-type" onchange="onPeriodeTypeChange()">
+            <option value="this-week">Minggu Ini</option>
+            <option value="this-month">Bulan Ini</option>
+            <option value="this-year">Tahun Ini</option>
+            <option value="all-time">Semua Waktu</option>
+            <option value="pick-week">Pilih Minggu Tertentu</option>
+            <option value="pick-month">Pilih Bulan Tertentu</option>
+            <option value="pick-year">Pilih Tahun Tertentu</option>
+          </select>
+        </div>
+        <div class="filter-item" id="p-extra-wrap" style="display:none">
+          <label id="p-extra-label">Pilih</label>
+          <input type="week" id="p-week" style="display:none">
+          <input type="month" id="p-month" style="display:none">
+          <select id="p-year" style="display:none"></select>
+        </div>
+        <button class="btn-apply" onclick="applyPeriodeFilter()">Terapkan</button>
       </div>
-      <div class="filter-item">
-        <label>Dari Tanggal</label>
-        <input type="date" id="f-date-from">
+
+      <div id="periode-body">
+        <div class="loading-text">Memuat data...</div>
       </div>
-      <div class="filter-item">
-        <label>Sampai Tanggal</label>
-        <input type="date" id="f-date-to">
-      </div>
-      <div class="filter-item">
-        <label>Dari Jam</label>
-        <input type="time" id="f-time-from">
-      </div>
-      <div class="filter-item">
-        <label>Sampai Jam</label>
-        <input type="time" id="f-time-to">
-      </div>
-      <button class="btn-apply" onclick="applyFilters()">Terapkan Filter</button>
     </div>
 
-    <div id="dash-body">
-      <div class="loading-text">Memuat data...</div>
+    <!-- ===== SECTION 2: DETAIL LOG KUNJUNGAN ===== -->
+    <div class="section-block">
+      <h2 class="section-title">📝 Detail Log Kunjungan</h2>
+
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label>Tipe Pengunjung</label>
+          <select id="f-type">
+            <option value="all">Semua</option>
+            <option value="guest">Hanya Tamu</option>
+            <option value="admin">Hanya Admin</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>Dari Tanggal</label>
+          <input type="date" id="f-date-from">
+        </div>
+        <div class="filter-item">
+          <label>Sampai Tanggal</label>
+          <input type="date" id="f-date-to">
+        </div>
+        <div class="filter-item">
+          <label>Dari Jam</label>
+          <input type="time" id="f-time-from">
+        </div>
+        <div class="filter-item">
+          <label>Sampai Jam</label>
+          <input type="time" id="f-time-to">
+        </div>
+        <button class="btn-apply" onclick="applyLogFilter()">Terapkan Filter</button>
+      </div>
+      <div class="filter-note">Filter ini hanya berlaku untuk tabel log kunjungan di bawah ini.</div>
+
+      <div id="log-body">
+        <div class="loading-text">Memuat data...</div>
+      </div>
     </div>
   </div>
 
@@ -296,7 +423,8 @@
     import { firebaseConfig, SUPERADMIN_EMAIL } from './firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
     import {
-      getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+      getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
+      onAuthStateChanged, signOut
     } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
     import {
       getFirestore, collection, getDocs, query, orderBy, limit
@@ -306,9 +434,20 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let allLogs = [];   // dari visitLogs
+    let allLogs = [];    // dari visitLogs
     let allVisitors = []; // dari visitors
-    let allResults = []; // dari results
+    let allResults = [];  // dari results (hasil main)
+
+    // ---- LOGIN ----
+    window.doLoginGoogle = async function () {
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = '';
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) {
+        errEl.textContent = 'Login Google gagal atau dibatalkan.';
+      }
+    };
 
     window.doLogin = async function () {
       const email = document.getElementById('login-email').value.trim();
@@ -332,8 +471,11 @@
         loginScreen.style.display = 'none';
         dashScreen.style.display = 'block';
         document.getElementById('who-text').textContent = `Masuk sebagai ${user.email}`;
+        initPeriodeYearOptions();
+        setDefaultLogFilters();
         await loadAllData();
-        applyFilters();
+        applyPeriodeFilter();
+        applyLogFilter();
       } else if (user && user.email !== SUPERADMIN_EMAIL) {
         document.getElementById('login-error').textContent = 'Akun ini tidak diizinkan mengakses dashboard.';
         await signOut(auth);
@@ -361,37 +503,99 @@
         allVisitors = visitorSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         allResults = resultSnap.docs.map(d => ({ id: d.id, ...d.data(), _date: tsToDate(d.data().timestamp) }));
       } catch (e) {
-        document.getElementById('dash-body').innerHTML =
-          `<div class="empty-text">Gagal memuat data. Cek konfigurasi Firebase &amp; aturan Firestore.<br><span style="color:#FF6B6B">${e.message || e}</span></div>`;
+        const msg = `<div class="empty-text">Gagal memuat data. Cek konfigurasi Firebase &amp; aturan Firestore.<br><span style="color:#FF6B6B">${e.message || e}</span></div>`;
+        document.getElementById('periode-body').innerHTML = msg;
+        document.getElementById('log-body').innerHTML = msg;
       }
     }
 
-    window.applyFilters = function () {
-      const type = document.getElementById('f-type').value;
-      const dFrom = document.getElementById('f-date-from').value;
-      const dTo = document.getElementById('f-date-to').value;
-      const tFrom = document.getElementById('f-time-from').value;
-      const tTo = document.getElementById('f-time-to').value;
+    // ============================================================
+    // FILTER 1 — PERIODE (untuk section Analisa & Ringkasan)
+    // ============================================================
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function dateStr(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
 
-      const filtered = allLogs.filter((log) => {
-        if (!log._date) return false;
-        if (type === 'admin' && !log.isAdmin) return false;
-        if (type === 'guest' && log.isAdmin) return false;
+    function initPeriodeYearOptions() {
+      const sel = document.getElementById('p-year');
+      const thisYear = new Date().getFullYear();
+      let html = '';
+      for (let y = thisYear; y >= thisYear - 6; y--) html += `<option value="${y}">${y}</option>`;
+      sel.innerHTML = html;
+    }
 
-        const d = log._date;
-        const dateStr = d.toISOString().slice(0, 10);
-        if (dFrom && dateStr < dFrom) return false;
-        if (dTo && dateStr > dTo) return false;
+    window.onPeriodeTypeChange = function () {
+      const type = document.getElementById('p-type').value;
+      const wrap = document.getElementById('p-extra-wrap');
+      const wk = document.getElementById('p-week');
+      const mo = document.getElementById('p-month');
+      const yr = document.getElementById('p-year');
+      const label = document.getElementById('p-extra-label');
+      wk.style.display = 'none'; mo.style.display = 'none'; yr.style.display = 'none';
+      if (type === 'pick-week') { wrap.style.display = 'flex'; wk.style.display = 'block'; label.textContent = 'Minggu Ke-'; }
+      else if (type === 'pick-month') { wrap.style.display = 'flex'; mo.style.display = 'block'; label.textContent = 'Bulan'; }
+      else if (type === 'pick-year') { wrap.style.display = 'flex'; yr.style.display = 'block'; label.textContent = 'Tahun'; }
+      else { wrap.style.display = 'none'; }
+    };
 
-        if (tFrom || tTo) {
-          const hm = d.toTimeString().slice(0, 5);
-          if (tFrom && hm < tFrom) return false;
-          if (tTo && hm > tTo) return false;
-        }
-        return true;
-      });
+    function isoWeekToRange(isoWeekStr) {
+      // format: "2026-W05"
+      const [yearStr, weekStr] = isoWeekStr.split('-W');
+      const year = parseInt(yearStr, 10), week = parseInt(weekStr, 10);
+      const simple = new Date(year, 0, 1 + (week - 1) * 7);
+      const dow = simple.getDay() || 7;
+      const monday = new Date(simple);
+      if (dow <= 4) monday.setDate(simple.getDate() - dow + 1);
+      else monday.setDate(simple.getDate() + 8 - dow);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return { from: monday, to: sunday };
+    }
 
-      renderDashboard(filtered);
+    function getPeriodeRange() {
+      const type = document.getElementById('p-type').value;
+      const now = new Date();
+      if (type === 'this-week') {
+        const dow = now.getDay() || 7;
+        const monday = new Date(now); monday.setDate(now.getDate() - dow + 1);
+        const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+        return { from: monday, to: sunday };
+      }
+      if (type === 'this-month') {
+        return { from: new Date(now.getFullYear(), now.getMonth(), 1), to: new Date(now.getFullYear(), now.getMonth() + 1, 0) };
+      }
+      if (type === 'this-year') {
+        return { from: new Date(now.getFullYear(), 0, 1), to: new Date(now.getFullYear(), 11, 31) };
+      }
+      if (type === 'all-time') return null;
+      if (type === 'pick-week') {
+        const val = document.getElementById('p-week').value;
+        if (!val) return null;
+        return isoWeekToRange(val);
+      }
+      if (type === 'pick-month') {
+        const val = document.getElementById('p-month').value; // "2026-03"
+        if (!val) return null;
+        const [y, m] = val.split('-').map(Number);
+        return { from: new Date(y, m - 1, 1), to: new Date(y, m, 0) };
+      }
+      if (type === 'pick-year') {
+        const y = parseInt(document.getElementById('p-year').value, 10);
+        return { from: new Date(y, 0, 1), to: new Date(y, 11, 31) };
+      }
+      return null;
+    }
+
+    window.applyPeriodeFilter = function () {
+      const range = getPeriodeRange();
+      const inRange = (d) => {
+        if (!d) return false;
+        if (!range) return true;
+        const ds = dateStr(d);
+        return ds >= dateStr(range.from) && ds <= dateStr(range.to);
+      };
+      const logsInPeriod = allLogs.filter(l => inRange(l._date));
+      const resultsInPeriod = allResults.filter(r => inRange(r._date));
+      renderPeriodeSection(logsInPeriod, resultsInPeriod);
     };
 
     function tally(arr, keyFn) {
@@ -415,10 +619,10 @@
       return `<div class="panel"><h3>${title}</h3>${rows || '<div class="empty-text">Belum ada data</div>'}</div>`;
     }
 
-    function renderDashboard(logs) {
-      const body = document.getElementById('dash-body');
-      if (!logs.length) {
-        body.innerHTML = '<div class="empty-text">Tidak ada data untuk filter ini.</div>';
+    function renderPeriodeSection(logs, results) {
+      const body = document.getElementById('periode-body');
+      if (!logs.length && !results.length) {
+        body.innerHTML = '<div class="empty-text">Tidak ada data untuk periode ini.</div>';
         return;
       }
 
@@ -426,7 +630,6 @@
       const repeatVisitors = allVisitors.filter(v => (v.visitCount || 0) > 1).length;
       const repeatPct = allVisitors.length ? Math.round((repeatVisitors / allVisitors.length) * 100) : 0;
 
-      // Jam sibuk (0-23)
       const hourCounts = new Array(24).fill(0);
       logs.forEach(l => { if (l._date) hourCounts[l._date.getHours()]++; });
       const maxHour = Math.max(1, ...hourCounts);
@@ -436,7 +639,8 @@
           <div class="hour-label">${h}</div>
         </div>`).join('');
 
-      const geoTally = tally(logs, l => [l.city, l.country].filter(Boolean).join(', '));
+      const cityTally = tally(logs, l => l.city);
+      const countryTally = tally(logs, l => l.country);
       const deviceTally = tally(logs, l => l.device);
       const osTally = tally(logs, l => l.os);
       const browserTally = tally(logs, l => l.browser);
@@ -444,15 +648,16 @@
 
       const cardsHtml = `
         <div class="cards-grid">
-          <div class="stat-card"><div class="snum">${logs.length}</div><div class="slabel">Total Kunjungan (sesuai filter)</div></div>
-          <div class="stat-card"><div class="snum">${uniqueVisitorIds.size}</div><div class="slabel">Pengunjung Unik (sesuai filter)</div></div>
-          <div class="stat-card"><div class="snum">${allResults.length}</div><div class="slabel">Total Hasil Main Tersimpan</div></div>
-          <div class="stat-card"><div class="snum">${repeatPct}%</div><div class="slabel">Pengunjung yang Kembali</div></div>
+          <div class="stat-card"><div class="snum">${logs.length}</div><div class="slabel">Total Kunjungan (periode ini)</div></div>
+          <div class="stat-card"><div class="snum">${uniqueVisitorIds.size}</div><div class="slabel">Pengunjung Unik (periode ini)</div></div>
+          <div class="stat-card"><div class="snum">${results.length}</div><div class="slabel">Hasil Main (periode ini)</div></div>
+          <div class="stat-card"><div class="snum">${repeatPct}%</div><div class="slabel">Pengunjung Pernah Kembali (keseluruhan)</div></div>
         </div>`;
 
       const panelsHtml = `
         <div class="grid-2">
-          ${renderBarPanel('🌍 Lokasi (Kota, Negara)', geoTally)}
+          ${renderBarPanel('🏙️ Kota', cityTally)}
+          ${renderBarPanel('🌍 Negara', countryTally)}
           ${renderBarPanel('📱 Perangkat', deviceTally)}
           ${renderBarPanel('💻 Sistem Operasi', osTally)}
           ${renderBarPanel('🌐 Browser', browserTally)}
@@ -463,9 +668,85 @@
           </div>
         </div>`;
 
+      const resultRows = results.slice(0, 500).map(r => {
+        const waktu = r._date ? r._date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+        const tipe = r.isAdmin
+          ? '<span class="badge badge-admin">Admin</span>'
+          : '<span class="badge badge-guest">Tamu</span>';
+        return `<tr>
+          <td>${waktu}</td>
+          <td>${r.name || '-'}</td>
+          <td>${r.levelName || r.level || '-'}</td>
+          <td>${r.methodName || '-'}</td>
+          <td><b style="color:#FFD93D">${r.score ?? '-'}</b> / ${r.total ?? 10}</td>
+          <td>${tipe}</td>
+        </tr>`;
+      }).join('');
+
+      const resultTableHtml = `
+        <div class="panel">
+          <h3>🏆 Rincian Nilai Hasil Main (maks. 500 baris terbaru)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Waktu</th><th>Nama</th><th>Level</th><th>Metode</th><th>Skor</th><th>Tipe</th></tr>
+              </thead>
+              <tbody>${resultRows || '<tr><td colspan="6" class="empty-text">Belum ada hasil main pada periode ini</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>`;
+
+      body.innerHTML = cardsHtml + panelsHtml + resultTableHtml;
+    }
+
+    // ============================================================
+    // FILTER 2 — DETAIL LOG KUNJUNGAN (default: hari ini, 00:00–23:59)
+    // ============================================================
+    function setDefaultLogFilters() {
+      const today = dateStr(new Date());
+      document.getElementById('f-date-from').value = today;
+      document.getElementById('f-date-to').value = today;
+      document.getElementById('f-time-from').value = '00:00';
+      document.getElementById('f-time-to').value = '23:59';
+    }
+
+    window.applyLogFilter = function () {
+      const type = document.getElementById('f-type').value;
+      const dFrom = document.getElementById('f-date-from').value;
+      const dTo = document.getElementById('f-date-to').value;
+      const tFrom = document.getElementById('f-time-from').value;
+      const tTo = document.getElementById('f-time-to').value;
+
+      const filtered = allLogs.filter((log) => {
+        if (!log._date) return false;
+        if (type === 'admin' && !log.isAdmin) return false;
+        if (type === 'guest' && log.isAdmin) return false;
+
+        const d = log._date;
+        const ds = dateStr(d);
+        if (dFrom && ds < dFrom) return false;
+        if (dTo && ds > dTo) return false;
+
+        if (tFrom || tTo) {
+          const hm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+          if (tFrom && hm < tFrom) return false;
+          if (tTo && hm > tTo) return false;
+        }
+        return true;
+      });
+
+      renderLogSection(filtered);
+    };
+
+    function renderLogSection(logs) {
+      const body = document.getElementById('log-body');
+      if (!logs.length) {
+        body.innerHTML = '<div class="empty-text">Tidak ada kunjungan untuk filter ini.</div>';
+        return;
+      }
+
       const rows = logs.slice(0, 500).map(l => {
         const waktu = l._date ? l._date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
-        const lokasi = [l.city, l.country].filter(Boolean).join(', ') || '-';
         const perangkat = `${l.device || '-'} · ${l.os || '-'} · ${l.browser || '-'}`;
         const tipe = l.isAdmin
           ? '<span class="badge badge-admin">Admin</span>'
@@ -474,21 +755,21 @@
           <td>${waktu}</td>
           <td>${l.name || '<i style="color:rgba(255,255,255,0.35)">Belum isi nama</i>'}</td>
           <td>${l.level || '-'}</td>
-          <td>${lokasi}</td>
+          <td>${l.city || '-'}</td>
+          <td>${l.country || '-'}</td>
           <td>${perangkat}</td>
           <td>${l.source || '-'}</td>
           <td>${tipe}</td>
         </tr>`;
       }).join('');
 
-      const tableHtml = `
+      body.innerHTML = `
         <div class="panel">
-          <h3>📝 Detail Log Kunjungan (maks. 500 baris terbaru)</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Waktu</th><th>Nama</th><th>Level</th><th>Lokasi</th>
+                  <th>Waktu</th><th>Nama</th><th>Level</th><th>Kota</th><th>Negara</th>
                   <th>Perangkat</th><th>Sumber</th><th>Tipe</th>
                 </tr>
               </thead>
@@ -496,8 +777,6 @@
             </table>
           </div>
         </div>`;
-
-      body.innerHTML = cardsHtml + panelsHtml + tableHtml;
     }
   </script>
 </body>

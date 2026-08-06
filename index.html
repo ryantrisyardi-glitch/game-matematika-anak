@@ -981,6 +981,171 @@
       display: none;
     }
 
+    /* ===== SHARE ROW (WhatsApp / Instagram) ===== */
+    .share-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .btn-share-sm {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      color: #fff;
+      font-family: inherit;
+      touch-action: manipulation;
+      transition: transform 0.15s;
+    }
+
+    .btn-share-sm:active { transform: scale(0.95); }
+
+    .btn-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
+
+    .btn-instagram {
+      background: linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7);
+    }
+
+    /* ===== ADMIN CORNER BUTTON & MODAL ===== */
+    .admin-corner-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 500;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .admin-corner-btn:active { transform: scale(0.92); }
+
+    .admin-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .admin-modal-overlay.show {
+      display: flex;
+    }
+
+    .admin-modal-card {
+      background: #14143a;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 26px 22px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+    }
+
+    .admin-modal-card h3 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+    }
+
+    .admin-modal-card p {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.55);
+      margin: 0 0 18px;
+    }
+
+    .btn-google {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #fff;
+      color: #1a1a2e;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .btn-google:active { transform: scale(0.98); }
+
+    .admin-status-box {
+      background: rgba(107, 203, 119, 0.15);
+      border: 1px solid rgba(107, 203, 119, 0.4);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.82rem;
+      margin-bottom: 12px;
+      color: #6BCB77;
+      word-break: break-word;
+    }
+
+    .admin-status-box.denied {
+      background: rgba(255, 107, 107, 0.15);
+      border-color: rgba(255, 107, 107, 0.4);
+      color: #FF6B6B;
+    }
+
+    .admin-modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-admin-action {
+      width: 100%;
+      padding: 11px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-admin-dash { background: linear-gradient(135deg, #FFD93D, #FF922B); color: #1a1a2e; }
+    .btn-admin-close { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
+    .btn-admin-logout { background: rgba(255, 107, 107, 0.15); color: #FF6B6B; border: 1px solid rgba(255, 107, 107, 0.35); }
+
+    .admin-mode-badge {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 500;
+      background: rgba(204, 93, 232, 0.25);
+      color: #CC5DE8;
+      border: 1px solid rgba(204, 93, 232, 0.5);
+      padding: 5px 12px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: none;
+    }
+
+    .admin-mode-badge.show { display: block; }
+
     /* ===== TOAST ===== */
     #toast {
       position: fixed;
@@ -1015,6 +1180,35 @@
   <div id="toast"></div>
 
   <!-- INTRO -->
+  <!-- ADMIN CORNER BUTTON & BADGE -->
+  <button class="admin-corner-btn" onclick="openAdminModal()" title="Login Admin">🔐</button>
+  <div class="admin-mode-badge" id="admin-mode-badge">👑 Mode Admin</div>
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div class="admin-modal-overlay" id="admin-modal-overlay">
+    <div class="admin-modal-card">
+      <h3>🔐 Login Admin</h3>
+      <p>Khusus untuk superadmin game ini.</p>
+      <div id="admin-modal-status"></div>
+      <div id="admin-modal-login-area">
+        <button class="btn-google" onclick="loginAdminGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34 5.4 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-4z" />
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.4 18.9 12.5 24 12.5c3.1 0 5.8 1.1 8 3l6-6C34 5.4 29.3 3 24 3c-7.4 0-13.8 4-17.2 10.2z" />
+            <path fill="#4CAF50" d="M24 45c5.2 0 9.9-2 13.4-5.2l-6.2-5.1C29.2 36.4 26.7 37 24 37c-5.3 0-9.7-3.4-11.3-8l-6.5 5c3.3 6.2 9.7 10 17.8 10.5z" />
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.9 2.5-2.5 4.6-4.6 6.1l6.2 5.1C39.9 37 44 31.1 44 24c0-1.4-.1-2.7-.4-3.5z" />
+          </svg>
+          Masuk dengan Google
+        </button>
+      </div>
+      <div class="admin-modal-actions" id="admin-modal-actions" style="display:none">
+        <a class="btn-admin-action btn-admin-dash" href="admin.html" target="_blank" rel="noopener">📊 Buka Dashboard</a>
+        <button class="btn-admin-action btn-admin-logout" onclick="logoutAdminSession()">Keluar dari Admin</button>
+      </div>
+      <button class="btn-admin-action btn-admin-close" style="margin-top:10px" onclick="closeAdminModal()">Tutup</button>
+    </div>
+  </div>
+
   <div id="screen-intro" class="screen active">
     <div class="card">
       <h1>🎮 Game<br>Matematika</h1>
@@ -1125,6 +1319,14 @@
         <button class="btn-share" onclick="bukaShare()">
           <span>📤</span> Bagikan Hasil
         </button>
+        <div class="share-row">
+          <button class="btn-share-sm btn-whatsapp" onclick="bagikanWhatsApp()">
+            <span>💬</span> WhatsApp
+          </button>
+          <button class="btn-share-sm btn-instagram" onclick="bagikanInstagram()">
+            <span>📸</span> Instagram
+          </button>
+        </div>
       </div>
       <!-- Saweria banner on result screen -->
       <a class="saweria-banner" href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener"
@@ -2314,6 +2516,96 @@
     }
 
     // ============================================================
+    // SHARE KE WHATSAPP / INSTAGRAM (dengan tracking sumber kunjungan)
+    // ============================================================
+    function bagikanWhatsApp() {
+      trackEvent('bagikan_whatsapp', { level: currentLevel, method: currentMethod });
+      const trackedUrl = `${GAME_URL}?src=whatsapp`;
+      const score = parseInt(document.getElementById('result-score').textContent) || 0;
+      const level = namaLevel(currentLevel);
+      const text = `🎮 Game Matematika Anak\n👤 ${playerName} baru saja bermain!\n📚 ${level} · Skor ${score}/10\n\nAyo main juga, seru banget! 👇\n${trackedUrl}`;
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, '_blank');
+    }
+
+    async function bagikanInstagram() {
+      trackEvent('bagikan_instagram', { level: currentLevel, method: currentMethod });
+      const trackedUrl = `${GAME_URL}?src=instagram`;
+      const score = parseInt(document.getElementById('result-score').textContent) || 0;
+      const level = namaLevel(currentLevel);
+      const caption = `🎮 Game Matematika Anak — ${playerName} skor ${score}/10 di ${level}! Main juga yuk: ${trackedUrl}`;
+
+      try {
+        await navigator.clipboard.writeText(caption);
+      } catch (e) { /* abaikan jika clipboard tak tersedia */ }
+
+      try {
+        const cv = await buatGambarShare();
+        const blob = await new Promise((res, rej) => {
+          cv.toBlob(b => b ? res(b) : rej(new Error('toBlob null')), 'image/png', 0.92);
+        });
+        const file = new File([blob], 'hasil-matematika.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          showToast('Link disalin! Tempel di caption/bio Instagram-mu 😊', '');
+          await navigator.share({ title: '🎮 Game Matematika Anak', files: [file] });
+          return;
+        }
+      } catch (e) { /* lanjut ke fallback di bawah */ }
+
+      // Fallback: buka Instagram + kasih tahu teks sudah disalin
+      showToast('Link & teks disalin! Tempel di caption/bio Instagram-mu 📋', '');
+      window.open('https://www.instagram.com/', '_blank');
+    }
+
+    // ============================================================
+    // ADMIN LOGIN (Google) — main sebagai admin & akses dashboard
+    // tanpa perlu URL khusus
+    // ============================================================
+    let isAdminSession = false;
+
+    function openAdminModal() { document.getElementById('admin-modal-overlay').classList.add('show'); }
+    function closeAdminModal() { document.getElementById('admin-modal-overlay').classList.remove('show'); }
+
+    function loginAdminGoogle() {
+      const statusEl = document.getElementById('admin-modal-status');
+      statusEl.innerHTML = '';
+      window.__analytics?.loginGoogle().catch((e) => {
+        statusEl.innerHTML = `<div class="admin-status-box denied">Login gagal: ${e?.message || 'coba lagi.'}</div>`;
+      });
+    }
+
+    function logoutAdminSession() {
+      window.__analytics?.logoutAdmin();
+    }
+
+    // Dipanggil dari modul analytics saat status login berubah
+    window.onAdminAuthChange = function (isMatchedSuperadmin, hasUser, email) {
+      isAdminSession = isMatchedSuperadmin;
+      const statusEl = document.getElementById('admin-modal-status');
+      const loginArea = document.getElementById('admin-modal-login-area');
+      const actionsArea = document.getElementById('admin-modal-actions');
+      const badge = document.getElementById('admin-mode-badge');
+
+      if (isMatchedSuperadmin) {
+        statusEl.innerHTML = `<div class="admin-status-box">✅ Login sebagai admin<br>${email}</div>`;
+        loginArea.style.display = 'none';
+        actionsArea.style.display = 'flex';
+        badge.classList.add('show');
+      } else if (hasUser) {
+        statusEl.innerHTML = `<div class="admin-status-box denied">Akun (${email}) tidak diizinkan sebagai admin.</div>`;
+        loginArea.style.display = 'block';
+        actionsArea.style.display = 'none';
+        badge.classList.remove('show');
+      } else {
+        statusEl.innerHTML = '';
+        loginArea.style.display = 'block';
+        actionsArea.style.display = 'none';
+        badge.classList.remove('show');
+      }
+    };
+
+    // ============================================================
     // KEYBOARD
     // ============================================================
     window.addEventListener('keydown', e => {
@@ -2373,16 +2665,23 @@
        dipanggil dari script utama di atas tanpa perlu diubah strukturnya.
   ============================================================ -->
   <script type="module">
-    import { firebaseConfig } from './firebase-config.js';
+    import { firebaseConfig, SUPERADMIN_EMAIL } from './firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc, addDoc,
       collection, serverTimestamp, increment
     } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
 
     let db = null;
+    let auth = null;
     let visitorId = null;
     let sessionLogId = null;
+    let isAdminFlag = false; // true jika superadmin (Google login) ATAU ?admin=ryan (fallback lama)
+    let authReadyResolve;
+    const authReady = new Promise((res) => { authReadyResolve = res; });
 
     function uuidv4() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -2461,10 +2760,43 @@
       return { ip: '-', city: '-', region: '-', country: '-' };
     }
 
+    // ---- AUTH (Google Sign-In untuk admin) ----
+    function setupAuth(app) {
+      auth = getAuth(app);
+      let firstCallback = true;
+      onAuthStateChanged(auth, async (user) => {
+        const matched = !!user && user.email === SUPERADMIN_EMAIL;
+        isAdminFlag = matched || isAdminFlag; // Google login ATAU flag lama (?admin=ryan) tetap dipertahankan
+        if (matched) isAdminFlag = true;
+        if (user && !matched) isAdminFlag = false; // login akun lain yang bukan superadmin → bukan admin
+
+        // Jika ini bukan callback pertama (artinya login/logout terjadi setelah initVisitor jalan),
+        // update dokumen visitor & sesi kunjungan yang sedang berjalan.
+        if (!firstCallback && db && visitorId) {
+          try {
+            await setDoc(doc(db, 'visitors', visitorId), { isAdmin: isAdminFlag }, { merge: true });
+            if (sessionLogId) await updateDoc(doc(db, 'visitLogs', sessionLogId), { isAdmin: isAdminFlag });
+          } catch (e) { console.warn('[Analytics] Gagal update status admin:', e); }
+        }
+
+        window.onAdminAuthChange?.(matched, !!user, user?.email || null);
+        if (firstCallback) { firstCallback = false; authReadyResolve(); }
+      });
+    }
+
+    async function loginGoogle() {
+      if (!auth) throw new Error('Auth belum siap');
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    }
+
+    function logoutAdmin() {
+      if (auth) signOut(auth);
+    }
+
     async function initVisitor() {
       try {
         const params = new URLSearchParams(location.search);
-        const isAdmin = params.get('admin') === 'ryan'; // tandai kunjungan testing superadmin
+        if (params.get('admin') === 'ryan') isAdminFlag = true; // fallback lama, tetap didukung
 
         visitorId = localStorage.getItem('matika_visitor_id');
         if (!visitorId) {
@@ -2474,6 +2806,12 @@
 
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
+        setupAuth(app);
+
+        // Tunggu status login awal diketahui (maks. 2.5 detik) supaya kunjungan
+        // yang dibuat oleh admin yang sudah pernah login (sesi tersimpan) langsung
+        // tertandai isAdmin:true sejak awal, bukan menyusul.
+        await Promise.race([authReady, new Promise((r) => setTimeout(r, 2500))]);
 
         const { device, os, browser } = detectDevice();
         const source = detectSource();
@@ -2488,7 +2826,7 @@
           lastSeen: serverTimestamp(),
           firstSeen: prevFirstSeen,
           visitCount: increment(1),
-          device, os, browser, source, isAdmin,
+          device, os, browser, source, isAdmin: isAdminFlag,
           city: geo.city, region: geo.region, country: geo.country, ip: geo.ip
         }, { merge: true });
 
@@ -2497,7 +2835,7 @@
           timestamp: serverTimestamp(),
           name: null,
           level: null,
-          device, os, browser, source, isAdmin,
+          device, os, browser, source, isAdmin: isAdminFlag,
           city: geo.city, region: geo.region, country: geo.country, ip: geo.ip
         });
         sessionLogId = logRef.id;
@@ -2527,12 +2865,17 @@
         await addDoc(collection(db, 'results'), {
           visitorId,
           timestamp: serverTimestamp(),
+          isAdmin: isAdminFlag,
           ...payload
         });
       } catch (e) { console.warn('[Analytics] Gagal simpan hasil:', e); }
     }
 
-    window.__analytics = { updateVisitorName, updateSessionLevel, logResult };
+    window.__analytics = {
+      updateVisitorName, updateSessionLevel, logResult,
+      loginGoogle, logoutAdmin,
+      getAdminStatus: () => isAdminFlag
+    };
     initVisitor();
   </script>
 </body>
