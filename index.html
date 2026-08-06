@@ -336,6 +336,40 @@
       color: #FFD93D;
     }
 
+    .kode-legend.kode-hidden .kode-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .kode-legend.kode-hidden .kc-val {
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-kode-toggle {
+      background: rgba(77, 150, 255, 0.18);
+      border: 1px solid rgba(77, 150, 255, 0.45);
+      color: #4D96FF;
+      padding: 7px 16px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    .btn-kode-toggle:active { transform: scale(0.95); }
+
+    .kode-timer-badge {
+      background: rgba(255, 217, 61, 0.15);
+      border: 1px solid rgba(255, 217, 61, 0.4);
+      color: #FFD93D;
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
     .kode-equation {
       display: flex;
       align-items: center;
@@ -1287,6 +1321,27 @@
     </div>
   </div>
 
+  <!-- KODE METODE SELECT (Memorizing vs Normal) -->
+  <div id="screen-kode-metode" class="screen">
+    <h2>🧠 Cara Bermain</h2>
+    <p class="sub" id="kode-metode-sub">Pilih cara kode ditampilkan!</p>
+    <div class="tier-grid">
+      <div class="tier-card" onclick="pilihKodeMetode('memorizing')">
+        <div class="tsample">⏳ 🙈</div>
+        <div class="tname">Memorizing</div>
+        <div class="tdesc">Kode tampil sebentar dengan timer,<br>lalu sembunyi otomatis. Latih ingatanmu!</div>
+      </div>
+      <div class="tier-card" onclick="pilihKodeMetode('normal')">
+        <div class="tsample">👁️ 🔤</div>
+        <div class="tname">Normal</div>
+        <div class="tdesc">Kode selalu terlihat.<br>Kamu bisa sembunyikan manual kapan saja.</div>
+      </div>
+    </div>
+    <div class="back-row">
+      <button class="btn-ghost" onclick="showScreen('screen-kode-tier')">← Kembali</button>
+    </div>
+  </div>
+
   <!-- GAME -->
   <div id="screen-game" class="screen">
     <div class="game-header">
@@ -1624,6 +1679,10 @@
     // GAME STATE
     // ============================================================
     let currentLevel = 0, currentMethod = 0, currentKodeTier = 0;
+    let currentKodeMode = 'normal'; // 'memorizing' | 'normal' — khusus Mode Kode
+    let pendingKodeTier = 0; // dipakai saat proses pemilihan tingkat → metode kode
+    let kodeValuesVisible = true, kodeManualOverride = false;
+    let kodeTimerInterval = null, kodeCountdown = 0;
     let currentSoal = 0, totalSoal = 0, score = 0;
     let soalList = []; // tiap item: {a,b,op,ans,userAns,correct}
     let pic1Locked = false, pic2Locked = false;
@@ -1724,29 +1783,38 @@
     }
     function pilihKodeTier(tier) {
       trackEvent('pilih_kode_tier', { level: currentLevel, tier: tier });
-      mulaiGame(currentLevel, 3, tier);
+      pendingKodeTier = tier;
+      document.getElementById('kode-metode-sub').textContent = `${namaLevel(currentLevel)} · Kode ${tier} Tingkat — Pilih cara kode ditampilkan!`;
+      showScreen('screen-kode-metode');
     }
-    function mulaiGame(lv, method, kodeTier) {
+    function pilihKodeMetode(mode) {
+      trackEvent('pilih_kode_metode', { level: currentLevel, tier: pendingKodeTier, mode });
+      mulaiGame(currentLevel, 3, pendingKodeTier, mode);
+    }
+    function mulaiGame(lv, method, kodeTier, kodeMode) {
       currentLevel = lv; currentMethod = method; currentKodeTier = kodeTier || 0;
+      currentKodeMode = (method === 3) ? (kodeMode || currentKodeMode || 'normal') : 'normal';
       currentSoal = 0; score = 0; waitingNext = false;
       soalList = buatSoal(lv, method, currentKodeTier);
       totalSoal = soalList.length;
-      trackEvent('mulai_game', { level: lv, method: method, kodeTier: currentKodeTier });
-      const levelLabel = method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat` : `${namaLevel(lv)} · ${method === 1 ? 'Gambar' : 'Angka'}`;
+      trackEvent('mulai_game', { level: lv, method: method, kodeTier: currentKodeTier, kodeMode: currentKodeMode });
+      const modeLabel = currentKodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
+      const levelLabel = method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat · ${modeLabel}` : `${namaLevel(lv)} · ${method === 1 ? 'Gambar' : 'Angka'}`;
       window.__analytics?.updateSessionLevel(levelLabel);
       document.getElementById('info-level').textContent =
-        method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat` : namaLevel(lv);
+        method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier}T · ${modeLabel}` : namaLevel(lv);
       showScreen('screen-game');
       tampilSoal();
     }
     function kembaliLevel() {
+      clearKodeTimer();
       showScreen('screen-level');
       playSound(AUDIO.pilihlevel, 0.9);
     }
-    function kembaliDariGame() { showScreen('screen-method'); renderMethodScreen(currentLevel); }
+    function kembaliDariGame() { clearKodeTimer(); showScreen('screen-method'); renderMethodScreen(currentLevel); }
     function mainLagi() {
       trackEvent('main_lagi', { level: currentLevel, method: currentMethod });
-      mulaiGame(currentLevel, currentMethod, currentKodeTier);
+      mulaiGame(currentLevel, currentMethod, currentKodeTier, currentKodeMode);
     }
     function namaLevel(lv) { return ['', 'Level Pemula', 'Level Menengah', 'Menengah Atas', 'Level Atas'][lv]; }
 
@@ -2034,10 +2102,10 @@
     }
     function tampilKode(soal, theme) {
       const legendHtml = soal.symbols.map((sym, i) => `
-      <div class="kode-chip">
+      <div class="kode-chip" id="kchip-${i}">
         <span class="kc-emoji">${sym}</span>
         <span class="kc-eq">=</span>
-        <span class="kc-val">${soal.values[i]}</span>
+        <span class="kc-val" id="kcval-${i}">${soal.values[i]}</span>
       </div>`).join('');
 
       let eqHtml = `<span class="kode-emoji-op">${soal.symbols[0]}</span>`;
@@ -2045,11 +2113,20 @@
         eqHtml += `<span class="eq-op">${soal.ops[i]}</span><span class="kode-emoji-op">${soal.symbols[i + 1]}</span>`;
       }
 
+      const isMemorizing = currentKodeMode === 'memorizing';
+      const introText = isMemorizing
+        ? 'Hafalkan kodenya sebelum waktu habis! ⏳'
+        : 'Ingat kode di bawah ini, lalu pecahkan soalnya!';
+
       document.getElementById('game-box').innerHTML = `
-    <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:12px">
-      Ingat kode di bawah ini, lalu pecahkan soalnya!
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:10px">
+      ${introText}
     </p>
-    <div class="kode-legend">${legendHtml}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn-kode-toggle" id="kode-toggle-btn" onclick="toggleKodeVisibility()">🙈 Sembunyikan</button>
+      <span class="kode-timer-badge" id="kode-timer-badge" style="display:none"></span>
+    </div>
+    <div class="kode-legend" id="kode-legend-wrap">${legendHtml}</div>
     <div class="kode-equation">
       ${eqHtml}
       <span class="eq-equals">=</span>
@@ -2062,6 +2139,63 @@
     </div>
   `;
       setTimeout(() => document.getElementById('inp-ans-kode')?.focus(), 60);
+
+      // Reset & mulai state show/hide kode untuk soal ini
+      kodeValuesVisible = true;
+      kodeManualOverride = false;
+      clearKodeTimer();
+      if (isMemorizing) {
+        kodeCountdown = kodeAutoHideSeconds(soal.lv, soal.tier);
+        updateKodeTimerBadge();
+        document.getElementById('kode-timer-badge').style.display = 'inline-block';
+        kodeTimerInterval = setInterval(() => {
+          kodeCountdown--;
+          if (kodeCountdown <= 0) {
+            clearKodeTimer();
+            if (!kodeManualOverride) setKodeVisibility(false, true);
+          } else {
+            updateKodeTimerBadge();
+          }
+        }, 1000);
+      }
+    }
+
+    function kodeAutoHideSeconds(lv, tier) {
+      let base = (tier === 3) ? 8 : 5;
+      if (lv >= 3) base += 2; // angka lebih besar/panjang di level atas → waktu sedikit lebih lama
+      return base;
+    }
+
+    function updateKodeTimerBadge() {
+      const el = document.getElementById('kode-timer-badge');
+      if (el) el.textContent = `⏳ ${kodeCountdown}s`;
+    }
+
+    function clearKodeTimer() {
+      if (kodeTimerInterval) { clearInterval(kodeTimerInterval); kodeTimerInterval = null; }
+      const badge = document.getElementById('kode-timer-badge');
+      if (badge) badge.style.display = 'none';
+    }
+
+    function setKodeVisibility(visible, fromTimer = false) {
+      kodeValuesVisible = visible;
+      const soal = soalList[currentSoal];
+      if (!soal) return;
+      soal.values.forEach((v, i) => {
+        const el = document.getElementById(`kcval-${i}`);
+        if (el) el.textContent = visible ? v : '❓';
+      });
+      const wrap = document.getElementById('kode-legend-wrap');
+      if (wrap) wrap.classList.toggle('kode-hidden', !visible);
+      const btn = document.getElementById('kode-toggle-btn');
+      if (btn) btn.innerHTML = visible ? '🙈 Sembunyikan' : '👁️ Tampilkan';
+      if (!fromTimer) { /* interaksi manual — timer sudah dihentikan di toggleKodeVisibility() */ }
+    }
+
+    function toggleKodeVisibility() {
+      kodeManualOverride = true; // sekali disentuh manual, auto-timer tidak lagi mengubah tampilan
+      clearKodeTimer();
+      setKodeVisibility(!kodeValuesVisible);
     }
 
     function cekJawabanKode(el) {
@@ -2078,6 +2212,9 @@
 
       soalList[currentSoal].userAns = val;
       const exprTxt = soalKodeExprText(soal);
+      clearKodeTimer();
+      kodeManualOverride = true;
+      setKodeVisibility(true); // tampilkan kembali kodenya saat sudah dijawab, untuk review
       if (val === soal.ans) {
         el.classList.remove('wrong'); el.classList.add('correct');
         el.readOnly = true;
@@ -2099,6 +2236,7 @@
     // HASIL
     // ============================================================
     function tampilHasil() {
+      clearKodeTimer();
       document.getElementById('prog-fill').style.width = '100%';
       const total = totalSoal;
       // Untuk metode 1: score sudah dalam skala 10 (tiap soal benar = 2 poin, 5 soal)
