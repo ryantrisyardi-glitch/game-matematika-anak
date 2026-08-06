@@ -3,7 +3,10 @@
 // meski koneksi lambat/offline. File audio dari GitHub TIDAK di-cache di sini agar
 // selalu ambil versi terbaru dan menghindari kuota cache yang besar.
 
-const CACHE_NAME = 'matika-app-shell-v1';
+// Naikkan angka versi ini setiap kali ada perubahan pada app shell
+// supaya service worker lama otomatis dibuang dan cache baru dibuat.
+const SW_VERSION = 'v2';
+const CACHE_NAME = 'matika-app-shell-' + SW_VERSION;
 const APP_SHELL = [
   './',
   './manifest.json',
@@ -26,9 +29,22 @@ self.addEventListener('activate', (event) => {
           .filter((key) => key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
+     .then(() => self.clients.matchAll({ type: 'window' }))
+     .then((clients) => {
+       // Beritahu semua tab yang terbuka bahwa versi baru sudah aktif,
+       // supaya halaman bisa reload otomatis tanpa perlu clear cache manual.
+       clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED', version: SW_VERSION }));
+     })
   );
-  self.clients.claim();
+});
+
+// Memungkinkan halaman memaksa service worker baru untuk langsung aktif
+// (dipakai bersama flow "update ditemukan" di index.html).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {

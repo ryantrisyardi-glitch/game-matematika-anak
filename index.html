@@ -303,6 +303,97 @@
       margin-top: 18px;
     }
 
+    /* ===== METODE KODE ===== */
+    .kode-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .kode-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      padding: 8px 12px;
+      font-weight: 800;
+      font-size: clamp(1rem, 4vw, 1.3rem);
+    }
+
+    .kode-chip .kc-emoji {
+      font-size: clamp(1.5rem, 6vw, 2rem);
+    }
+
+    .kode-chip .kc-eq {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .kode-chip .kc-val {
+      color: #FFD93D;
+    }
+
+    .kode-equation {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(4px, 2vw, 10px);
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .kode-emoji-op {
+      font-size: clamp(2rem, 9vw, 3.2rem);
+    }
+
+    .tier-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 560px;
+      width: 100%;
+    }
+
+    .tier-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 24px 20px;
+      cursor: pointer;
+      text-align: center;
+      flex: 1;
+      min-width: 170px;
+      max-width: 240px;
+      transition: transform 0.18s;
+      touch-action: manipulation;
+    }
+
+    .tier-card:active {
+      transform: scale(0.97);
+    }
+
+    .tier-card .tsample {
+      font-size: clamp(1.3rem, 5vw, 1.7rem);
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .tier-card .tname {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .tier-card .tdesc {
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.58);
+      line-height: 1.5;
+    }
+
     /* ===== GAME SCREEN ===== */
     #screen-game {
       justify-content: flex-start;
@@ -974,21 +1065,31 @@
   <!-- METHOD SELECT -->
   <div id="screen-method" class="screen">
     <h2>🎯 Pilih Metode Bermain</h2>
-    <p class="sub">Level Pemula — Pilih cara belajarmu!</p>
-    <div class="method-grid">
-      <div class="method-card" onclick="mulaiGame(1,1)">
-        <div class="icon">🖼️</div>
-        <div class="mname">Metode Gambar</div>
-        <div class="mdesc">Hitung gambar dulu, lalu jawab soalnya.<br>5 soal seru!</div>
+    <p class="sub" id="method-sub">Level Pemula — Pilih cara belajarmu!</p>
+    <div class="method-grid" id="method-grid"></div>
+    <div class="back-row">
+      <button class="btn-ghost" onclick="kembaliLevel()">← Kembali ke Level</button>
+    </div>
+  </div>
+
+  <!-- KODE TIER SELECT -->
+  <div id="screen-kode-tier" class="screen">
+    <h2>🔤 Mode Kode</h2>
+    <p class="sub" id="kode-tier-sub">Pilih jumlah simbol dalam soal!</p>
+    <div class="tier-grid">
+      <div class="tier-card" onclick="pilihKodeTier(2)">
+        <div class="tsample">🏠 + 🖥️</div>
+        <div class="tname">2 Tingkat</div>
+        <div class="tdesc">Gabungan 2 simbol kode.<br>10 soal</div>
       </div>
-      <div class="method-card" onclick="mulaiGame(1,2)">
-        <div class="icon">🔢</div>
-        <div class="mname">Metode Angka</div>
-        <div class="mdesc">Langsung jawab soal angka.<br>10 soal cepat!</div>
+      <div class="tier-card" onclick="pilihKodeTier(3)">
+        <div class="tsample">🪖 + 🥁 + 👑</div>
+        <div class="tname">3 Tingkat</div>
+        <div class="tdesc">Gabungan 3 simbol kode.<br>5 soal, lebih menantang!</div>
       </div>
     </div>
     <div class="back-row">
-      <button class="btn-ghost" onclick="kembaliLevel()">← Kembali ke Level</button>
+      <button class="btn-ghost" onclick="showScreen('screen-method')">← Kembali ke Metode</button>
     </div>
   </div>
 
@@ -1320,12 +1421,27 @@
     // ============================================================
     // GAME STATE
     // ============================================================
-    let currentLevel = 0, currentMethod = 0;
+    let currentLevel = 0, currentMethod = 0, currentKodeTier = 0;
     let currentSoal = 0, totalSoal = 0, score = 0;
     let soalList = []; // tiap item: {a,b,op,ans,userAns,correct}
     let pic1Locked = false, pic2Locked = false;
     let lastTheme = null, lastObjKey = null;
     let waitingNext = false;
+
+    // ============================================================
+    // MODE KODE — EMOJI SIMBOL
+    // ============================================================
+    const CODE_EMOJIS = ['🐴', '🏠', '🕋', '🛺', '🪖', '🥁', '👑', '🎈', '🖥️', '🔔',
+      '🎯', '🚦', '🎨', '🧸', '🪁', '🎸', '🛴', '🧩', '🎃', '🧦', '🪀', '🎲'];
+    function randomCodeSymbols(n) {
+      const pool = [...CODE_EMOJIS];
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const idx = Math.floor(Math.random() * pool.length);
+        out.push(pool.splice(idx, 1)[0]);
+      }
+      return out;
+    }
 
     // ============================================================
     // UTILS
@@ -1366,23 +1482,55 @@
     function pilihLevel(lv) {
       currentLevel = lv;
       trackEvent('pilih_level', { level: lv });
-      if (lv === 1) {
-        showScreen('screen-method');
-      } else if (lv === 4) {
-        // Putar levelatassound dan langsung mulai game secara bersamaan
+      if (lv === 4) {
+        // Putar levelatassound sambil menampilkan menu metode
         playSound(AUDIO.levelatassound, 0.9);
-        mulaiGame(lv, 2);
-      } else {
-        mulaiGame(lv, 2);
       }
+      renderMethodScreen(lv);
+      showScreen('screen-method');
     }
-    function mulaiGame(lv, method) {
-      currentLevel = lv; currentMethod = method;
+    function renderMethodScreen(lv) {
+      document.getElementById('method-sub').textContent = `${namaLevel(lv)} — Pilih cara belajarmu!`;
+      const grid = document.getElementById('method-grid');
+      let html = '';
+      if (lv === 1) {
+        html += `
+      <div class="method-card" onclick="mulaiGame(1,1)">
+        <div class="icon">🖼️</div>
+        <div class="mname">Metode Gambar</div>
+        <div class="mdesc">Hitung gambar dulu, lalu jawab soalnya.<br>5 soal seru!</div>
+      </div>`;
+      }
+      html += `
+      <div class="method-card" onclick="mulaiGame(${lv},2)">
+        <div class="icon">🔢</div>
+        <div class="mname">Metode Angka</div>
+        <div class="mdesc">Langsung jawab soal angka.<br>10 soal cepat!</div>
+      </div>
+      <div class="method-card" onclick="pilihMetodeKode(${lv})">
+        <div class="icon">🔤</div>
+        <div class="mname">Mode Kode</div>
+        <div class="mdesc">Simbol = angka rahasia.<br>Pecahkan kodenya!</div>
+      </div>`;
+      grid.innerHTML = html;
+    }
+    function pilihMetodeKode(lv) {
+      currentLevel = lv;
+      document.getElementById('kode-tier-sub').textContent = `${namaLevel(lv)} — Pilih jumlah simbol dalam soal!`;
+      showScreen('screen-kode-tier');
+    }
+    function pilihKodeTier(tier) {
+      trackEvent('pilih_kode_tier', { level: currentLevel, tier: tier });
+      mulaiGame(currentLevel, 3, tier);
+    }
+    function mulaiGame(lv, method, kodeTier) {
+      currentLevel = lv; currentMethod = method; currentKodeTier = kodeTier || 0;
       currentSoal = 0; score = 0; waitingNext = false;
-      soalList = buatSoal(lv, method);
+      soalList = buatSoal(lv, method, currentKodeTier);
       totalSoal = soalList.length;
-      trackEvent('mulai_game', { level: lv, method: method });
-      document.getElementById('info-level').textContent = namaLevel(lv);
+      trackEvent('mulai_game', { level: lv, method: method, kodeTier: currentKodeTier });
+      document.getElementById('info-level').textContent =
+        method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat` : namaLevel(lv);
       showScreen('screen-game');
       tampilSoal();
     }
@@ -1390,19 +1538,52 @@
       showScreen('screen-level');
       playSound(AUDIO.pilihlevel, 0.9);
     }
-    function kembaliDariGame() { currentLevel === 1 ? showScreen('screen-method') : showScreen('screen-level'); }
+    function kembaliDariGame() { showScreen('screen-method'); renderMethodScreen(currentLevel); }
     function mainLagi() {
       trackEvent('main_lagi', { level: currentLevel, method: currentMethod });
-      mulaiGame(currentLevel, currentMethod);
+      mulaiGame(currentLevel, currentMethod, currentKodeTier);
     }
     function namaLevel(lv) { return ['', 'Level Pemula', 'Level Menengah', 'Menengah Atas', 'Level Atas'][lv]; }
 
     // ============================================================
     // SOAL GENERATOR
     // ============================================================
-    function buatSoal(lv, method) {
+    function buatSoal(lv, method, kodeTier) {
+      if (method === 3) {
+        const n = (kodeTier === 3) ? 5 : 10;
+        return Array.from({ length: n }, () => ({ ...buatSatuSoalKode(lv, kodeTier), userAns: null, correct: false }));
+      }
       const n = (method === 1) ? 5 : 10;
       return Array.from({ length: n }, () => ({ ...buatSatuSoal(lv), userAns: null, correct: false }));
+    }
+    // ---- GENERATOR SOAL MODE KODE ----
+    function kodeRange(lv) { return [9, 19, 50, 99][lv - 1] || 19; }
+    function buatSatuSoalKode(lv, tier) {
+      const maxVal = kodeRange(lv);
+      const allowNegative = lv >= 3;
+      const symbols = randomCodeSymbols(tier);
+      // Nilai unik untuk tiap simbol
+      const used = new Set();
+      const values = symbols.map(() => {
+        let v;
+        do { v = rInt(1, maxVal); } while (used.has(v));
+        used.add(v);
+        return v;
+      });
+
+      let ops = [], ans = values[0], attempts = 0, ok = false;
+      while (!ok && attempts < 40) {
+        ops = []; ans = values[0]; ok = true;
+        for (let i = 1; i < tier; i++) {
+          let op = rndFrom(['+', '-']);
+          let next = op === '+' ? ans + values[i] : ans - values[i];
+          if (!allowNegative && next < 0) { op = '+'; next = ans + values[i]; } // paksa tambah agar tetap positif
+          ops.push(op); ans = next;
+        }
+        attempts++;
+      }
+
+      return { symbols, values, ops, ans, mode: 'kode', lv, tier };
     }
     function buatSatuSoal(lv) {
       let a, b, op;
@@ -1452,6 +1633,7 @@
       box.style.background = `linear-gradient(135deg,${theme.colors[0]}18,${theme.colors[1]}18)`;
 
       if (currentLevel === 1 && currentMethod === 1) tampilGambar(soal, theme);
+      else if (soal.mode === 'kode') tampilKode(soal, theme);
       else tampilAngka(soal, theme);
     }
 
@@ -1617,6 +1799,76 @@
       else tampilSoal();
     }
 
+    // ---- MODE KODE ----
+    function soalKodeExprText(soal) {
+      // "10 + 4 - 6" versi angka asli, untuk hint & review
+      let txt = String(soal.values[0]);
+      for (let i = 0; i < soal.ops.length; i++) txt += ` ${soal.ops[i]} ${soal.values[i + 1]}`;
+      return txt;
+    }
+    function tampilKode(soal, theme) {
+      const legendHtml = soal.symbols.map((sym, i) => `
+      <div class="kode-chip">
+        <span class="kc-emoji">${sym}</span>
+        <span class="kc-eq">=</span>
+        <span class="kc-val">${soal.values[i]}</span>
+      </div>`).join('');
+
+      let eqHtml = `<span class="kode-emoji-op">${soal.symbols[0]}</span>`;
+      for (let i = 0; i < soal.ops.length; i++) {
+        eqHtml += `<span class="eq-op">${soal.ops[i]}</span><span class="kode-emoji-op">${soal.symbols[i + 1]}</span>`;
+      }
+
+      document.getElementById('game-box').innerHTML = `
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:12px">
+      Ingat kode di bawah ini, lalu pecahkan soalnya!
+    </p>
+    <div class="kode-legend">${legendHtml}</div>
+    <div class="kode-equation">
+      ${eqHtml}
+      <span class="eq-equals">=</span>
+      <input class="answer-input" id="inp-ans-kode" type="text" inputmode="numeric"
+        pattern="[0-9-]*" placeholder="?" maxlength="4" autocomplete="off"
+        oninput="cekJawabanKode(this)">
+    </div>
+    <div id="next-wrap" style="display:none">
+      <button class="btn-next" onclick="lanjutSoal()">Lanjut →</button>
+    </div>
+  `;
+      setTimeout(() => document.getElementById('inp-ans-kode')?.focus(), 60);
+    }
+
+    function cekJawabanKode(el) {
+      if (waitingNext) return;
+      const soal = soalList[currentSoal];
+      const raw = el.value.replace(/[^0-9\-]/g, '');
+      if (!raw || raw === '-') return;
+      const val = parseInt(raw, 10);
+
+      const absVal = Math.abs(val), absAns = Math.abs(soal.ans);
+      const lenVal = String(absVal).length, lenAns = String(absAns).length;
+      const tooBig = (soal.ans >= 0 && val > soal.ans) || (soal.ans < 0 && val > 0 && val > absAns);
+      if (!tooBig && lenVal < lenAns) return; // masih mungkin berlanjut
+
+      soalList[currentSoal].userAns = val;
+      const exprTxt = soalKodeExprText(soal);
+      if (val === soal.ans) {
+        el.classList.remove('wrong'); el.classList.add('correct');
+        el.readOnly = true;
+        score += (soal.tier === 3) ? 2 : 1;
+        soalList[currentSoal].correct = true;
+        playCorrect();
+        document.getElementById('hint-text').textContent = `✅ Benar! ${exprTxt} = ${soal.ans}`;
+        setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1200);
+      } else {
+        el.classList.remove('correct'); el.classList.add('wrong');
+        el.readOnly = true; waitingNext = true;
+        playError();
+        document.getElementById('hint-text').textContent = `❌ Jawaban yang benar: ${exprTxt} = ${soal.ans}`;
+        document.getElementById('next-wrap').style.display = 'block';
+      }
+    }
+
     // ============================================================
     // HASIL
     // ============================================================
@@ -1661,10 +1913,11 @@
         soalList.forEach((s, i) => {
           if (!s.correct) {
             const userStr = s.userAns !== null ? `Jawabanmu: <span class="review-user">${s.userAns}</span>` : 'Belum dijawab';
+            const soalTxt = s.mode === 'kode' ? soalKodeExprText(s) : `${s.a} ${s.op} ${s.b}`;
             html += `
         <div class="review-item">
           <span class="review-num">${i + 1}.</span>
-          <span class="review-soal">${s.a} ${s.op} ${s.b}</span>
+          <span class="review-soal">${soalTxt}</span>
           <span class="review-ans">
             = <span class="review-correct">${s.ans}</span><br>
             <span style="font-size:0.78rem;color:rgba(255,255,255,0.45)">${userStr}</span>
@@ -1690,7 +1943,7 @@
     function buatShareText() {
       const score = parseInt(document.getElementById('result-score').textContent) || 0;
       const level = namaLevel(currentLevel);
-      const method = currentMethod === 1 ? 'Metode Gambar' : 'Metode Angka';
+      const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : 'Metode Angka');
       const bar = '⭐'.repeat(score) + '☆'.repeat(10 - score);
       return `🎮 Game Matematika Anak\n👤 ${playerName} baru saja bermain!\n📚 ${level} · ${method}\n🏆 Skor: ${score}/10\n${bar}\n\nAyo main juga! 👇\n${GAME_URL}`;
     }
@@ -1700,7 +1953,7 @@
         try {
           const score = parseInt(document.getElementById('result-score').textContent) || 0;
           const level = namaLevel(currentLevel);
-          const method = currentMethod === 1 ? 'Metode Gambar' : 'Metode Angka';
+          const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : 'Metode Angka');
           const emoji = document.getElementById('result-emoji').textContent;
 
           // Portrait 9:16-ish — cocok untuk story & feed
@@ -2039,8 +2292,41 @@
     // PWA - Registrasi Service Worker
     // ============================================================
     if ('serviceWorker' in navigator) {
+      let swRefreshing = false;
+
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => { });
+        navigator.serviceWorker.register('sw.js').then((reg) => {
+          // Jika ada worker baru yang sedang menunggu (biasanya dari sesi sebelumnya),
+          // langsung minta dia aktif.
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+
+          // Pantau kalau ada worker baru terdeteksi (versi baru sudah di-deploy)
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // Ada versi baru siap pakai → minta langsung aktif
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+
+          // Cek update secara berkala (setiap kali app dibuka lagi / kembali aktif)
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') reg.update().catch(() => { });
+          });
+          setInterval(() => reg.update().catch(() => { }), 60 * 60 * 1000); // tiap 1 jam
+        }).catch(() => { });
+
+        // Saat service worker baru resmi mengambil alih kontrol halaman,
+        // reload otomatis sekali supaya user langsung dapat versi terbaru
+        // TANPA perlu clear cache manual.
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (swRefreshing) return;
+          swRefreshing = true;
+          window.location.reload();
+        });
       });
     }
   </script>
