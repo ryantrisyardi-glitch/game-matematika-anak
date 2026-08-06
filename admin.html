@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Game Matematika Anak</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0a2e;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    a { color: #4D96FF; }
+
+    /* ===== LOGIN ===== */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .login-card h1 {
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+    }
+
+    .login-card p.sub {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 22px;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="time"],
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus { border-color: #FFD93D; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #FFD93D, #FF922B);
+      color: #1a1a2e;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .error-msg {
+      color: #FF6B6B;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    /* ===== DASHBOARD ===== */
+    #dash-screen { display: none; padding: 18px 16px 60px; max-width: 1200px; margin: 0 auto; }
+
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .dash-header h1 { font-size: 1.2rem; margin: 0; }
+    .dash-header .who { font-size: 0.8rem; color: rgba(255,255,255,0.55); }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+
+    .filter-item { display: flex; flex-direction: column; min-width: 140px; }
+    .filter-item label { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+    .filter-item input, .filter-item select { margin-bottom: 0; }
+
+    .btn-apply {
+      background: #4D96FF;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .stat-card .snum { font-size: 1.7rem; font-weight: 900; color: #FFD93D; }
+    .stat-card .slabel { font-size: 0.78rem; color: rgba(255,255,255,0.55); margin-top: 4px; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .panel h3 { margin: 0 0 12px; font-size: 0.95rem; color: #FFD93D; }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+    }
+
+    .bar-row .b-label { width: 90px; flex-shrink: 0; color: rgba(255,255,255,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-row .b-track { flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
+    .bar-row .b-fill { height: 100%; background: linear-gradient(90deg, #6BCB77, #4D96FF); border-radius: 6px; }
+    .bar-row .b-count { width: 34px; text-align: right; flex-shrink: 0; color: rgba(255,255,255,0.6); }
+
+    .hours-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 4px;
+      align-items: end;
+      height: 90px;
+    }
+
+    .hour-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+    .hour-bar { width: 100%; background: linear-gradient(180deg, #FFD93D, #FF922B); border-radius: 3px 3px 0 0; min-height: 2px; }
+    .hour-label { font-size: 0.55rem; color: rgba(255,255,255,0.4); margin-top: 3px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead th {
+      text-align: left;
+      padding: 10px 8px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      border-bottom: 2px solid rgba(255,255,255,0.12);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 9px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-admin { background: rgba(204,93,232,0.25); color: #CC5DE8; }
+    .badge-guest { background: rgba(107,203,119,0.25); color: #6BCB77; }
+
+    .table-wrap { overflow-x: auto; }
+
+    .loading-text { text-align: center; padding: 30px; color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+
+    .empty-text { text-align: center; padding: 24px; color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-card">
+      <h1>🔐 Admin Dashboard</h1>
+      <p class="sub">Game Matematika Anak — khusus Superadmin</p>
+      <input type="email" id="login-email" placeholder="Email" autocomplete="username">
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+      <button class="btn" onclick="doLogin()">Masuk</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash-screen">
+    <div class="dash-header">
+      <div>
+        <h1>📊 Analisa Engagement</h1>
+        <div class="who" id="who-text"></div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-item">
+        <label>Tipe Pengunjung</label>
+        <select id="f-type">
+          <option value="all">Semua</option>
+          <option value="guest">Hanya Tamu</option>
+          <option value="admin">Hanya Admin</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label>Dari Tanggal</label>
+        <input type="date" id="f-date-from">
+      </div>
+      <div class="filter-item">
+        <label>Sampai Tanggal</label>
+        <input type="date" id="f-date-to">
+      </div>
+      <div class="filter-item">
+        <label>Dari Jam</label>
+        <input type="time" id="f-time-from">
+      </div>
+      <div class="filter-item">
+        <label>Sampai Jam</label>
+        <input type="time" id="f-time-to">
+      </div>
+      <button class="btn-apply" onclick="applyFilters()">Terapkan Filter</button>
+    </div>
+
+    <div id="dash-body">
+      <div class="loading-text">Memuat data...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { firebaseConfig, SUPERADMIN_EMAIL } from './firebase-config.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+    import {
+      getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+    } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
+    import {
+      getFirestore, collection, getDocs, query, orderBy, limit
+    } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let allLogs = [];   // dari visitLogs
+    let allVisitors = []; // dari visitors
+    let allResults = []; // dari results
+
+    window.doLogin = async function () {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = '';
+      if (!email || !pass) { errEl.textContent = 'Isi email dan password.'; return; }
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (e) {
+        errEl.textContent = 'Login gagal: email atau password salah.';
+      }
+    };
+
+    window.doLogout = function () { signOut(auth); };
+
+    onAuthStateChanged(auth, async (user) => {
+      const loginScreen = document.getElementById('login-screen');
+      const dashScreen = document.getElementById('dash-screen');
+      if (user && user.email === SUPERADMIN_EMAIL) {
+        loginScreen.style.display = 'none';
+        dashScreen.style.display = 'block';
+        document.getElementById('who-text').textContent = `Masuk sebagai ${user.email}`;
+        await loadAllData();
+        applyFilters();
+      } else if (user && user.email !== SUPERADMIN_EMAIL) {
+        document.getElementById('login-error').textContent = 'Akun ini tidak diizinkan mengakses dashboard.';
+        await signOut(auth);
+      } else {
+        loginScreen.style.display = 'flex';
+        dashScreen.style.display = 'none';
+      }
+    });
+
+    function tsToDate(ts) {
+      if (!ts) return null;
+      if (ts.toDate) return ts.toDate();
+      if (ts.seconds) return new Date(ts.seconds * 1000);
+      return new Date(ts);
+    }
+
+    async function loadAllData() {
+      try {
+        const [logSnap, visitorSnap, resultSnap] = await Promise.all([
+          getDocs(query(collection(db, 'visitLogs'), orderBy('timestamp', 'desc'), limit(3000))),
+          getDocs(collection(db, 'visitors')),
+          getDocs(query(collection(db, 'results'), orderBy('timestamp', 'desc'), limit(3000)))
+        ]);
+        allLogs = logSnap.docs.map(d => ({ id: d.id, ...d.data(), _date: tsToDate(d.data().timestamp) }));
+        allVisitors = visitorSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        allResults = resultSnap.docs.map(d => ({ id: d.id, ...d.data(), _date: tsToDate(d.data().timestamp) }));
+      } catch (e) {
+        document.getElementById('dash-body').innerHTML =
+          `<div class="empty-text">Gagal memuat data. Cek konfigurasi Firebase &amp; aturan Firestore.<br><span style="color:#FF6B6B">${e.message || e}</span></div>`;
+      }
+    }
+
+    window.applyFilters = function () {
+      const type = document.getElementById('f-type').value;
+      const dFrom = document.getElementById('f-date-from').value;
+      const dTo = document.getElementById('f-date-to').value;
+      const tFrom = document.getElementById('f-time-from').value;
+      const tTo = document.getElementById('f-time-to').value;
+
+      const filtered = allLogs.filter((log) => {
+        if (!log._date) return false;
+        if (type === 'admin' && !log.isAdmin) return false;
+        if (type === 'guest' && log.isAdmin) return false;
+
+        const d = log._date;
+        const dateStr = d.toISOString().slice(0, 10);
+        if (dFrom && dateStr < dFrom) return false;
+        if (dTo && dateStr > dTo) return false;
+
+        if (tFrom || tTo) {
+          const hm = d.toTimeString().slice(0, 5);
+          if (tFrom && hm < tFrom) return false;
+          if (tTo && hm > tTo) return false;
+        }
+        return true;
+      });
+
+      renderDashboard(filtered);
+    };
+
+    function tally(arr, keyFn) {
+      const map = {};
+      arr.forEach((item) => {
+        const k = keyFn(item) || '-';
+        map[k] = (map[k] || 0) + 1;
+      });
+      return Object.entries(map).sort((a, b) => b[1] - a[1]);
+    }
+
+    function renderBarPanel(title, data, max = 8) {
+      const top = data.slice(0, max);
+      const maxCount = top.length ? top[0][1] : 1;
+      const rows = top.map(([label, count]) => `
+        <div class="bar-row">
+          <div class="b-label" title="${label}">${label}</div>
+          <div class="b-track"><div class="b-fill" style="width:${(count / maxCount) * 100}%"></div></div>
+          <div class="b-count">${count}</div>
+        </div>`).join('');
+      return `<div class="panel"><h3>${title}</h3>${rows || '<div class="empty-text">Belum ada data</div>'}</div>`;
+    }
+
+    function renderDashboard(logs) {
+      const body = document.getElementById('dash-body');
+      if (!logs.length) {
+        body.innerHTML = '<div class="empty-text">Tidak ada data untuk filter ini.</div>';
+        return;
+      }
+
+      const uniqueVisitorIds = new Set(logs.map(l => l.visitorId));
+      const repeatVisitors = allVisitors.filter(v => (v.visitCount || 0) > 1).length;
+      const repeatPct = allVisitors.length ? Math.round((repeatVisitors / allVisitors.length) * 100) : 0;
+
+      // Jam sibuk (0-23)
+      const hourCounts = new Array(24).fill(0);
+      logs.forEach(l => { if (l._date) hourCounts[l._date.getHours()]++; });
+      const maxHour = Math.max(1, ...hourCounts);
+      const hoursHtml = hourCounts.map((c, h) => `
+        <div class="hour-col">
+          <div class="hour-bar" style="height:${(c / maxHour) * 100}%" title="Jam ${h}:00 — ${c} kunjungan"></div>
+          <div class="hour-label">${h}</div>
+        </div>`).join('');
+
+      const geoTally = tally(logs, l => [l.city, l.country].filter(Boolean).join(', '));
+      const deviceTally = tally(logs, l => l.device);
+      const osTally = tally(logs, l => l.os);
+      const browserTally = tally(logs, l => l.browser);
+      const sourceTally = tally(logs, l => l.source);
+
+      const cardsHtml = `
+        <div class="cards-grid">
+          <div class="stat-card"><div class="snum">${logs.length}</div><div class="slabel">Total Kunjungan (sesuai filter)</div></div>
+          <div class="stat-card"><div class="snum">${uniqueVisitorIds.size}</div><div class="slabel">Pengunjung Unik (sesuai filter)</div></div>
+          <div class="stat-card"><div class="snum">${allResults.length}</div><div class="slabel">Total Hasil Main Tersimpan</div></div>
+          <div class="stat-card"><div class="snum">${repeatPct}%</div><div class="slabel">Pengunjung yang Kembali</div></div>
+        </div>`;
+
+      const panelsHtml = `
+        <div class="grid-2">
+          ${renderBarPanel('🌍 Lokasi (Kota, Negara)', geoTally)}
+          ${renderBarPanel('📱 Perangkat', deviceTally)}
+          ${renderBarPanel('💻 Sistem Operasi', osTally)}
+          ${renderBarPanel('🌐 Browser', browserTally)}
+          ${renderBarPanel('🔗 Sumber Kunjungan', sourceTally)}
+          <div class="panel">
+            <h3>⏰ Jam Tayang Sibuk</h3>
+            <div class="hours-grid">${hoursHtml}</div>
+          </div>
+        </div>`;
+
+      const rows = logs.slice(0, 500).map(l => {
+        const waktu = l._date ? l._date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+        const lokasi = [l.city, l.country].filter(Boolean).join(', ') || '-';
+        const perangkat = `${l.device || '-'} · ${l.os || '-'} · ${l.browser || '-'}`;
+        const tipe = l.isAdmin
+          ? '<span class="badge badge-admin">Admin</span>'
+          : '<span class="badge badge-guest">Tamu</span>';
+        return `<tr>
+          <td>${waktu}</td>
+          <td>${l.name || '<i style="color:rgba(255,255,255,0.35)">Belum isi nama</i>'}</td>
+          <td>${l.level || '-'}</td>
+          <td>${lokasi}</td>
+          <td>${perangkat}</td>
+          <td>${l.source || '-'}</td>
+          <td>${tipe}</td>
+        </tr>`;
+      }).join('');
+
+      const tableHtml = `
+        <div class="panel">
+          <h3>📝 Detail Log Kunjungan (maks. 500 baris terbaru)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Waktu</th><th>Nama</th><th>Level</th><th>Lokasi</th>
+                  <th>Perangkat</th><th>Sumber</th><th>Tipe</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+
+      body.innerHTML = cardsHtml + panelsHtml + tableHtml;
+    }
+  </script>
+</body>
+
+</html>

@@ -1466,6 +1466,7 @@
       playerName = val;
       identifyPlayer(playerName);
       trackEvent('mulai_main');
+      window.__analytics?.updateVisitorName(playerName);
       startBgMusic();
       // Simpan instance audio ke dalam variabel
       const welcomeAudio = playSound(AUDIO.welcome, 0.9);
@@ -1529,6 +1530,8 @@
       soalList = buatSoal(lv, method, currentKodeTier);
       totalSoal = soalList.length;
       trackEvent('mulai_game', { level: lv, method: method, kodeTier: currentKodeTier });
+      const levelLabel = method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat` : `${namaLevel(lv)} · ${method === 1 ? 'Gambar' : 'Angka'}`;
+      window.__analytics?.updateSessionLevel(levelLabel);
       document.getElementById('info-level').textContent =
         method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat` : namaLevel(lv);
       showScreen('screen-game');
@@ -1557,30 +1560,51 @@
       return Array.from({ length: n }, () => ({ ...buatSatuSoal(lv), userAns: null, correct: false }));
     }
     // ---- GENERATOR SOAL MODE KODE ----
+    // maxVal = batas nilai per simbol (mengikuti rentang angka level yang sudah ada)
+    // maxResult = batas HASIL akhir & hasil antara (tidak boleh melebihi ini)
     function kodeRange(lv) { return [9, 19, 50, 99][lv - 1] || 19; }
+    function kodeMaxResult(lv) { return [10, 20, 50, 99][lv - 1] || 20; }
     function buatSatuSoalKode(lv, tier) {
       const maxVal = kodeRange(lv);
+      const maxResult = kodeMaxResult(lv);
       const allowNegative = lv >= 3;
+      const minResult = allowNegative ? -maxResult : 0;
       const symbols = randomCodeSymbols(tier);
-      // Nilai unik untuk tiap simbol
+
       const used = new Set();
-      const values = symbols.map(() => {
-        let v;
-        do { v = rInt(1, maxVal); } while (used.has(v));
+      function pickValue(lo, hi) {
+        lo = Math.max(1, lo); hi = Math.max(lo, Math.min(hi, maxVal));
+        let v, tries = 0;
+        do { v = rInt(lo, hi); tries++; } while (used.has(v) && tries < 15);
         used.add(v);
         return v;
-      });
+      }
 
-      let ops = [], ans = values[0], attempts = 0, ok = false;
-      while (!ok && attempts < 40) {
-        ops = []; ans = values[0]; ok = true;
-        for (let i = 1; i < tier; i++) {
-          let op = rndFrom(['+', '-']);
-          let next = op === '+' ? ans + values[i] : ans - values[i];
-          if (!allowNegative && next < 0) { op = '+'; next = ans + values[i]; } // paksa tambah agar tetap positif
-          ops.push(op); ans = next;
+      // Nilai simbol pertama: harus tetap dalam batas hasil (misal Pemula max 10)
+      const values = [pickValue(1, Math.min(maxVal, maxResult))];
+      const ops = [];
+      let ans = values[0];
+
+      for (let i = 1; i < tier; i++) {
+        let op = rndFrom(['+', '-']);
+        const roomToAdd = maxResult - ans;      // sisa ruang untuk naik tanpa lewat batas atas
+        const roomToSubtract = ans - minResult; // sisa ruang untuk turun tanpa lewat batas bawah
+
+        if (op === '+' && roomToAdd < 1) op = '-';
+        if (op === '-' && roomToSubtract < 1) op = '+';
+        // Jika keduanya mentok (kasus langka), paksa tambah minimal (akan diklem di bawah)
+        if (op === '+' && roomToAdd < 1 && roomToSubtract < 1) op = '+';
+
+        let nextVal;
+        if (op === '+') {
+          nextVal = pickValue(1, roomToAdd);
+          ans += nextVal;
+        } else {
+          nextVal = pickValue(1, roomToSubtract);
+          ans -= nextVal;
         }
-        attempts++;
+        values.push(nextVal);
+        ops.push(op);
       }
 
       return { symbols, values, ops, ans, mode: 'kode', lv, tier };
@@ -1930,6 +1954,17 @@
 
       showScreen('screen-result');
       playResult(displayScore, 10);
+
+      window.__analytics?.logResult({
+        name: playerName,
+        level: currentLevel,
+        levelName: namaLevel(currentLevel),
+        method: currentMethod,
+        methodName: currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier} Tingkat` : 'Angka'),
+        kodeTier: currentKodeTier,
+        score: displayScore,
+        total: 10
+      });
     }
 
     // ============================================================
@@ -2329,6 +2364,176 @@
         });
       });
     }
+  </script>
+
+  <!-- ============================================================
+       ANALYTICS — Firestore (visitor tracking + simpan nama & hasil)
+       Lihat firebase-config.js untuk kredensial project Firebase.
+       Modul ini menempel fungsinya ke window.__analytics supaya bisa
+       dipanggil dari script utama di atas tanpa perlu diubah strukturnya.
+  ============================================================ -->
+  <script type="module">
+    import { firebaseConfig } from './firebase-config.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, addDoc,
+      collection, serverTimestamp, increment
+    } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+    let db = null;
+    let visitorId = null;
+    let sessionLogId = null;
+
+    function uuidv4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    }
+
+    function detectDevice() {
+      const ua = navigator.userAgent;
+      let device = 'Desktop';
+      if (/iPad|Tablet/i.test(ua)) device = 'Tablet';
+      else if (/Mobi|Android/i.test(ua)) device = 'Mobile';
+
+      let os = 'Lainnya';
+      if (/Windows/i.test(ua)) os = 'Windows';
+      else if (/Android/i.test(ua)) os = 'Android';
+      else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+      else if (/Mac OS/i.test(ua)) os = 'macOS';
+      else if (/Linux/i.test(ua)) os = 'Linux';
+
+      let browser = 'Lainnya';
+      if (/Instagram/i.test(ua)) browser = 'Instagram (In-App)';
+      else if (/FBAN|FBAV/i.test(ua)) browser = 'Facebook (In-App)';
+      else if (/Line\//i.test(ua)) browser = 'LINE (In-App)';
+      else if (/Twitter/i.test(ua)) browser = 'Twitter/X (In-App)';
+      else if (/EdgA|Edg\//i.test(ua)) browser = 'Edge';
+      else if (/OPR\//i.test(ua)) browser = 'Opera';
+      else if (/SamsungBrowser/i.test(ua)) browser = 'Samsung Internet';
+      else if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) browser = 'Chrome';
+      else if (/Firefox/i.test(ua)) browser = 'Firefox';
+      else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+
+      return { device, os, browser };
+    }
+
+    function detectSource() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('src')) return params.get('src');
+
+      const ua = navigator.userAgent;
+      if (/Instagram/i.test(ua)) return 'Instagram';
+      if (/FBAN|FBAV/i.test(ua)) return 'Facebook';
+      if (/Line\//i.test(ua)) return 'LINE';
+      if (/Twitter/i.test(ua)) return 'Twitter/X';
+
+      const ref = document.referrer;
+      if (!ref) return 'Langsung / Tidak diketahui';
+      try {
+        const host = new URL(ref).hostname.replace('www.', '');
+        if (/whatsapp/i.test(host)) return 'WhatsApp';
+        if (/instagram/i.test(host)) return 'Instagram';
+        if (/facebook/i.test(host)) return 'Facebook';
+        if (/google/i.test(host)) return 'Google';
+        if (/t\.co|twitter|x\.com/i.test(host)) return 'Twitter/X';
+        return host;
+      } catch (e) {
+        return 'Langsung / Tidak diketahui';
+      }
+    }
+
+    async function detectGeo() {
+      try {
+        const res = await fetch('https://ipwho.is/');
+        const data = await res.json();
+        if (data && data.success !== false) {
+          return {
+            ip: data.ip || '-',
+            city: data.city || '-',
+            region: data.region || '-',
+            country: data.country || '-'
+          };
+        }
+      } catch (e) { /* offline / diblokir — biarkan fallback di bawah */ }
+      return { ip: '-', city: '-', region: '-', country: '-' };
+    }
+
+    async function initVisitor() {
+      try {
+        const params = new URLSearchParams(location.search);
+        const isAdmin = params.get('admin') === 'ryan'; // tandai kunjungan testing superadmin
+
+        visitorId = localStorage.getItem('matika_visitor_id');
+        if (!visitorId) {
+          visitorId = uuidv4();
+          localStorage.setItem('matika_visitor_id', visitorId);
+        }
+
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+
+        const { device, os, browser } = detectDevice();
+        const source = detectSource();
+        const geo = await detectGeo();
+
+        const visitorRef = doc(db, 'visitors', visitorId);
+        const snap = await getDoc(visitorRef).catch(() => null);
+        const isFirstVisit = !snap || !snap.exists();
+        const prevFirstSeen = (!isFirstVisit && snap.data().firstSeen) ? snap.data().firstSeen : serverTimestamp();
+
+        await setDoc(visitorRef, {
+          lastSeen: serverTimestamp(),
+          firstSeen: prevFirstSeen,
+          visitCount: increment(1),
+          device, os, browser, source, isAdmin,
+          city: geo.city, region: geo.region, country: geo.country, ip: geo.ip
+        }, { merge: true });
+
+        const logRef = await addDoc(collection(db, 'visitLogs'), {
+          visitorId,
+          timestamp: serverTimestamp(),
+          name: null,
+          level: null,
+          device, os, browser, source, isAdmin,
+          city: geo.city, region: geo.region, country: geo.country, ip: geo.ip
+        });
+        sessionLogId = logRef.id;
+      } catch (e) {
+        console.warn('[Analytics] Gagal inisialisasi (cek firebase-config.js):', e);
+      }
+    }
+
+    async function updateVisitorName(name) {
+      try {
+        if (!db || !visitorId) return;
+        await setDoc(doc(db, 'visitors', visitorId), { name }, { merge: true });
+        if (sessionLogId) await updateDoc(doc(db, 'visitLogs', sessionLogId), { name });
+      } catch (e) { console.warn('[Analytics] Gagal update nama:', e); }
+    }
+
+    async function updateSessionLevel(levelLabel) {
+      try {
+        if (!db || !sessionLogId) return;
+        await updateDoc(doc(db, 'visitLogs', sessionLogId), { level: levelLabel });
+      } catch (e) { console.warn('[Analytics] Gagal update level sesi:', e); }
+    }
+
+    async function logResult(payload) {
+      try {
+        if (!db) return;
+        await addDoc(collection(db, 'results'), {
+          visitorId,
+          timestamp: serverTimestamp(),
+          ...payload
+        });
+      } catch (e) { console.warn('[Analytics] Gagal simpan hasil:', e); }
+    }
+
+    window.__analytics = { updateVisitorName, updateSessionLevel, logResult };
+    initVisitor();
   </script>
 </body>
 
