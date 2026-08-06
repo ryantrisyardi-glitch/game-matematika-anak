@@ -1048,6 +1048,17 @@
       background: linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7);
     }
 
+    .level-share-row {
+      margin: 10px 0 4px;
+      text-align: center;
+    }
+
+    .level-share-label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.55);
+      margin: 0 0 8px;
+    }
+
     /* ===== ADMIN CORNER BUTTON & MODAL ===== */
     .admin-corner-btn {
       position: fixed;
@@ -1180,6 +1191,76 @@
 
     .admin-mode-badge.show { display: block; }
 
+    /* ===== LIVE SESSION (Pantauan Orang Tua) ===== */
+    .live-corner-btn {
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      z-index: 500;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #4D96FF, #6BCB77);
+      color: #fff;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 4px 14px rgba(77, 150, 255, 0.4);
+    }
+
+    .live-corner-btn:active { transform: scale(0.92); }
+
+    .live-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .live-modal-overlay.show { display: flex; }
+
+    .live-modal-card {
+      background: #14143a;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 26px 22px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .live-modal-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
+    .live-modal-card .live-sub { font-size: 0.8rem; color: rgba(255, 255, 255, 0.55); margin: 0 0 16px; }
+
+    .live-qr-img {
+      border-radius: 14px;
+      background: #fff;
+      padding: 8px;
+      margin-bottom: 14px;
+    }
+
+    .live-code-display {
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: #FFD93D;
+      background: rgba(255, 217, 61, 0.1);
+      border: 1px solid rgba(255, 217, 61, 0.35);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
     /* ===== TOAST ===== */
     #toast {
       position: fixed;
@@ -1243,6 +1324,17 @@
     </div>
   </div>
 
+  <!-- LIVE SESSION (Pantauan Orang Tua) CORNER BUTTON & MODAL -->
+  <button class="live-corner-btn" onclick="openLiveModal()" title="Pantauan Orang Tua">📡</button>
+  <div class="live-modal-overlay" id="live-modal-overlay">
+    <div class="live-modal-card">
+      <h3>👨‍👩‍👧 Pantauan Orang Tua</h3>
+      <p class="live-sub">Biarkan orang tua ikut lihat progres bermainmu secara live!</p>
+      <div id="live-modal-body"></div>
+      <button class="btn-admin-action btn-admin-close" style="margin-top:10px" onclick="closeLiveModal()">Tutup</button>
+    </div>
+  </div>
+
   <div id="screen-intro" class="screen active">
     <div class="card">
       <h1>🎮 Game<br>Matematika</h1>
@@ -1277,6 +1369,17 @@
         <div class="icon">🏆</div>
         <div class="lname" style="color:#CC5DE8">Level Atas</div>
         <div class="ldesc">+ − × ÷<br>Kelas Sekolah Dasar</div>
+      </div>
+    </div>
+    <div class="level-share-row">
+      <p class="level-share-label">📤 Ajak teman main bareng!</p>
+      <div class="share-row">
+        <button class="btn-share-sm btn-whatsapp" onclick="bagikanUndanganWhatsApp()">
+          <span>💬</span> WhatsApp
+        </button>
+        <button class="btn-share-sm btn-instagram" onclick="bagikanUndanganInstagram()">
+          <span>📸</span> Instagram
+        </button>
       </div>
     </div>
     <!-- Saweria banner on level screen -->
@@ -1681,7 +1784,7 @@
     let currentLevel = 0, currentMethod = 0, currentKodeTier = 0;
     let currentKodeMode = 'normal'; // 'memorizing' | 'normal' — khusus Mode Kode
     let pendingKodeTier = 0; // dipakai saat proses pemilihan tingkat → metode kode
-    let kodeValuesVisible = true, kodeManualOverride = false;
+    let kodeValuesVisible = true, kodeManualOverride = false, kodeSoalRevealed = false;
     let kodeTimerInterval = null, kodeCountdown = 0;
     let currentSoal = 0, totalSoal = 0, score = 0;
     let soalList = []; // tiap item: {a,b,op,ans,userAns,correct}
@@ -1728,6 +1831,7 @@
       identifyPlayer(playerName);
       trackEvent('mulai_main');
       window.__analytics?.updateVisitorName(playerName);
+      window.__analytics?.startLiveSession(playerName);
       startBgMusic();
       // Simpan instance audio ke dalam variabel
       const welcomeAudio = playSound(AUDIO.welcome, 0.9);
@@ -1801,6 +1905,11 @@
       const modeLabel = currentKodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
       const levelLabel = method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat · ${modeLabel}` : `${namaLevel(lv)} · ${method === 1 ? 'Gambar' : 'Angka'}`;
       window.__analytics?.updateSessionLevel(levelLabel);
+      const methodLabel = method === 1 ? 'Gambar' : (method === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : 'Angka');
+      window.__analytics?.updateLiveSession({
+        level: lv, levelName: namaLevel(lv), method, methodName: methodLabel,
+        soalIndex: 0, totalSoal, score: 0, status: 'bermain', lastAnswerCorrect: null
+      });
       document.getElementById('info-level').textContent =
         method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier}T · ${modeLabel}` : namaLevel(lv);
       showScreen('screen-game');
@@ -2035,6 +2144,7 @@
         soalList[currentSoal].userAns = val;
         playCorrect();
         document.getElementById('hint-text').textContent = `✅ Benar! ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
+        window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
         setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1300);
       }
     }
@@ -2077,12 +2187,14 @@
         el.readOnly = true; score++; soalList[currentSoal].correct = true;
         playCorrect();
         document.getElementById('hint-text').textContent = `✅ Benar! ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
+        window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
         setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1200);
       } else {
         el.classList.remove('correct'); el.classList.add('wrong');
         el.readOnly = true; waitingNext = true;
         playError();
         document.getElementById('hint-text').textContent = `❌ Jawaban yang benar: ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
+        window.__analytics?.updateLiveSession({ soalIndex: currentSoal, score, lastAnswerCorrect: false });
         document.getElementById('next-wrap').style.display = 'block';
       }
     }
@@ -2100,10 +2212,22 @@
       for (let i = 0; i < soal.ops.length; i++) txt += ` ${soal.ops[i]} ${soal.values[i + 1]}`;
       return txt;
     }
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
     function tampilKode(soal, theme) {
-      const legendHtml = soal.symbols.map((sym, i) => `
+      // Urutan tampil legend diacak (beda dari urutan hitung soal.symbols),
+      // supaya tidak bisa dihafal berdasarkan posisi saja.
+      const displayOrder = shuffleArray(soal.symbols.map((_, i) => i));
+      const legendHtml = displayOrder.map((i) => `
       <div class="kode-chip" id="kchip-${i}">
-        <span class="kc-emoji">${sym}</span>
+        <span class="kc-emoji">${soal.symbols[i]}</span>
         <span class="kc-eq">=</span>
         <span class="kc-val" id="kcval-${i}">${soal.values[i]}</span>
       </div>`).join('');
@@ -2115,34 +2239,39 @@
 
       const isMemorizing = currentKodeMode === 'memorizing';
       const introText = isMemorizing
-        ? 'Hafalkan kodenya sebelum waktu habis! ⏳'
-        : 'Ingat kode di bawah ini, lalu pecahkan soalnya!';
+        ? 'Hafalkan kodenya dulu! Soal muncul otomatis saat waktu habis ⏳'
+        : 'Hafalkan kodenya, lalu tekan tombol di bawah untuk memulai soal 👇';
 
       document.getElementById('game-box').innerHTML = `
     <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:10px">
       ${introText}
     </p>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="btn-kode-toggle" id="kode-toggle-btn" onclick="toggleKodeVisibility()">🙈 Sembunyikan</button>
+      <button class="btn-kode-toggle" id="kode-toggle-btn" onclick="toggleKodeVisibility()">🙈 Sembunyikan &amp; Mulai Soal</button>
       <span class="kode-timer-badge" id="kode-timer-badge" style="display:none"></span>
     </div>
     <div class="kode-legend" id="kode-legend-wrap">${legendHtml}</div>
-    <div class="kode-equation">
-      ${eqHtml}
-      <span class="eq-equals">=</span>
-      <input class="answer-input" id="inp-ans-kode" type="text" inputmode="numeric"
-        pattern="[0-9-]*" placeholder="?" maxlength="4" autocomplete="off"
-        oninput="cekJawabanKode(this)">
+    <div id="kode-soal-wrap" style="display:none">
+      <div class="kode-equation">
+        ${eqHtml}
+        <span class="eq-equals">=</span>
+        <input class="answer-input" id="inp-ans-kode" type="text" inputmode="numeric"
+          pattern="[0-9-]*" placeholder="?" maxlength="4" autocomplete="off"
+          oninput="cekJawabanKode(this)">
+      </div>
     </div>
     <div id="next-wrap" style="display:none">
       <button class="btn-next" onclick="lanjutSoal()">Lanjut →</button>
     </div>
   `;
-      setTimeout(() => document.getElementById('inp-ans-kode')?.focus(), 60);
 
-      // Reset & mulai state show/hide kode untuk soal ini
+      // Reset state untuk soal ini
       kodeValuesVisible = true;
       kodeManualOverride = false;
+      kodeSoalRevealed = false;
+      document.getElementById('hint-text').textContent = isMemorizing
+        ? 'Hafalkan dulu ya, soal belum bisa dijawab sebelum waktu habis 🧠'
+        : 'Hafalkan dulu ya, tekan tombol untuk memulai soal 🧠';
       clearKodeTimer();
       if (isMemorizing) {
         kodeCountdown = kodeAutoHideSeconds(soal.lv, soal.tier);
@@ -2188,8 +2317,19 @@
       const wrap = document.getElementById('kode-legend-wrap');
       if (wrap) wrap.classList.toggle('kode-hidden', !visible);
       const btn = document.getElementById('kode-toggle-btn');
-      if (btn) btn.innerHTML = visible ? '🙈 Sembunyikan' : '👁️ Tampilkan';
-      if (!fromTimer) { /* interaksi manual — timer sudah dihentikan di toggleKodeVisibility() */ }
+      if (btn) btn.innerHTML = visible ? '🙈 Sembunyikan' : '👁️ Tampilkan Lagi';
+
+      // Soal baru muncul begitu kode disembunyikan untuk PERTAMA KALINYA —
+      // baik karena timer memorizing habis, maupun karena ditekan manual (mode normal/manual).
+      if (!visible && !kodeSoalRevealed) {
+        kodeSoalRevealed = true;
+        const soalWrap = document.getElementById('kode-soal-wrap');
+        if (soalWrap) {
+          soalWrap.style.display = 'block';
+          document.getElementById('hint-text').textContent = 'Sekarang jawab soalnya! 💪';
+          setTimeout(() => document.getElementById('inp-ans-kode')?.focus(), 60);
+        }
+      }
     }
 
     function toggleKodeVisibility() {
@@ -2222,12 +2362,14 @@
         soalList[currentSoal].correct = true;
         playCorrect();
         document.getElementById('hint-text').textContent = `✅ Benar! ${exprTxt} = ${soal.ans}`;
+        window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
         setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1200);
       } else {
         el.classList.remove('correct'); el.classList.add('wrong');
         el.readOnly = true; waitingNext = true;
         playError();
         document.getElementById('hint-text').textContent = `❌ Jawaban yang benar: ${exprTxt} = ${soal.ans}`;
+        window.__analytics?.updateLiveSession({ soalIndex: currentSoal, score, lastAnswerCorrect: false });
         document.getElementById('next-wrap').style.display = 'block';
       }
     }
@@ -2305,6 +2447,7 @@
         score: displayScore,
         total: 10
       });
+      window.__analytics?.updateLiveSession({ status: 'selesai', score: displayScore, soalIndex: totalSoal, lastAnswerCorrect: null });
     }
 
     // ============================================================
@@ -2697,6 +2840,34 @@
     }
 
     // ============================================================
+    // AJAK TEMAN (share dari layar pilih level, tanpa skor)
+    // ============================================================
+    function bagikanUndanganWhatsApp() {
+      trackEvent('bagikan_ajakan_whatsapp', {});
+      const trackedUrl = `${GAME_URL}?src=whatsapp`;
+      const text = `🎮 Yuk main Game Matematika Anak bareng aku!\nSeru buat belajar berhitung sambil main 😍\n\n${trackedUrl}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    async function bagikanUndanganInstagram() {
+      trackEvent('bagikan_ajakan_instagram', {});
+      const trackedUrl = `${GAME_URL}?src=instagram`;
+      const caption = `🎮 Yuk main Game Matematika Anak bareng aku! Seru buat belajar berhitung sambil main 😍 ${trackedUrl}`;
+
+      try { await navigator.clipboard.writeText(caption); } catch (e) { /* abaikan */ }
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: '🎮 Game Matematika Anak', text: caption, url: trackedUrl });
+          return;
+        } catch (e) { /* lanjut ke fallback di bawah */ }
+      }
+
+      showToast('Link disalin! Tempel di caption/bio/DM Instagram-mu 📋', '');
+      window.open('https://www.instagram.com/', '_blank');
+    }
+
+    // ============================================================
     // ADMIN LOGIN (Google) — main sebagai admin & akses dashboard
     // tanpa perlu URL khusus
     // ============================================================
@@ -2742,6 +2913,57 @@
         badge.classList.remove('show');
       }
     };
+
+    // ============================================================
+    // PANTAUAN ORANG TUA (Live Session) — kode sesi + QR
+    // ============================================================
+    function openLiveModal() {
+      renderLiveModalContent();
+      document.getElementById('live-modal-overlay').classList.add('show');
+    }
+    function closeLiveModal() { document.getElementById('live-modal-overlay').classList.remove('show'); }
+
+    function renderLiveModalContent() {
+      const box = document.getElementById('live-modal-body');
+      const code = window.__analytics?.getLiveCode?.();
+
+      if (!code) {
+        box.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.55)">
+          Masukkan namamu dan mulai main dulu untuk mengaktifkan pemantauan orang tua 😊
+        </p>`;
+        return;
+      }
+
+      const parentUrl = `${GAME_URL}parent.html?code=${code}`;
+      const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(parentUrl)}`;
+
+      box.innerHTML = `
+        <img src="${qrSrc}" alt="QR Pantauan Orang Tua" class="live-qr-img" width="180" height="180"
+          onerror="this.style.display='none'">
+        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin:0 0 10px">
+          Scan QR ini dari HP orang tua, atau ketik kode di bawah ini di halaman pantauan.
+        </p>
+        <div class="live-code-display">${code}</div>
+        <div class="admin-modal-actions">
+          <button class="btn-admin-action btn-admin-dash" onclick="copyLiveLink('${parentUrl}')">🔗 Salin Link Pantauan</button>
+          <button class="btn-admin-action btn-admin-logout" onclick="endLiveSessionUI()">🔴 Akhiri Sesi Pantau</button>
+        </div>
+      `;
+    }
+
+    function copyLiveLink(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link pantauan disalin! 🔗', '');
+      }).catch(() => {
+        showToast('Gagal menyalin, coba salin manual ya.', 'red');
+      });
+    }
+
+    function endLiveSessionUI() {
+      window.__analytics?.endLiveSession();
+      renderLiveModalContent();
+      showToast('Sesi pemantauan diakhiri 👋', '');
+    }
 
     // ============================================================
     // KEYBOARD
@@ -2806,8 +3028,9 @@
     import { firebaseConfig, SUPERADMIN_EMAIL } from './firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
     import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, addDoc,
-      collection, serverTimestamp, increment
+      getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc,
+      collection, serverTimestamp, increment, Timestamp,
+      query, where, limit, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
     import {
       getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
@@ -2817,9 +3040,34 @@
     let auth = null;
     let visitorId = null;
     let sessionLogId = null;
+    let liveSessionCode = null; // kode 6 karakter untuk fitur Pantauan Orang Tua
+    const LIVE_SESSION_TTL_HOURS = 4; // sesi live "kedaluwarsa" (dibersihkan otomatis via query, bukan TTL Firestore)
     let isAdminFlag = false; // true jika superadmin (Google login) ATAU ?admin=ryan (fallback lama)
     let authReadyResolve;
     const authReady = new Promise((res) => { authReadyResolve = res; });
+
+    // ---- BERSIH-BERSIH OTOMATIS TANPA TTL (kompatibel akun Firestore gratis) ----
+    // Setiap browser yang buka game/dashboard/pantauan ikut membersihkan sesi live
+    // yang sudah lewat expiresAt-nya, sedikit demi sedikit — dijalankan maksimal
+    // sekali per 6 jam per browser (localStorage) supaya hemat read/write.
+    async function cleanupExpiredLiveSessions() {
+      try {
+        if (!db) return;
+        const q = query(collection(db, 'liveSessions'), where('expiresAt', '<=', Timestamp.now()), limit(20));
+        const snap = await getDocs(q);
+        await Promise.all(snap.docs.map((d) => deleteDoc(d.ref).catch(() => { })));
+      } catch (e) { /* diamkan — bukan hal kritis, coba lagi nanti */ }
+    }
+    function maybeRunCleanup() {
+      try {
+        const last = parseInt(localStorage.getItem('matika_last_cleanup') || '0', 10);
+        const now = Date.now();
+        if (now - last > 6 * 3600 * 1000) {
+          localStorage.setItem('matika_last_cleanup', String(now));
+          cleanupExpiredLiveSessions();
+        }
+      } catch (e) { /* localStorage tak tersedia — lewati */ }
+    }
 
     function uuidv4() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -2945,6 +3193,7 @@
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         setupAuth(app);
+        maybeRunCleanup(); // bersihkan sesi live yang kedaluwarsa, jalan di background, tak perlu ditunggu
 
         // Tunggu status login awal diketahui (maks. 2.5 detik) supaya kunjungan
         // yang dibuat oleh admin yang sudah pernah login (sesi tersimpan) langsung
@@ -3009,10 +3258,82 @@
       } catch (e) { console.warn('[Analytics] Gagal simpan hasil:', e); }
     }
 
+    // ============================================================
+    // PANTAUAN ORANG TUA (Live Session) — kode sesi + QR, realtime via Firestore
+    // ============================================================
+    function genLiveSessionCode() {
+      // Hindari karakter ambigu (0/O, 1/I) supaya mudah dibaca & diketik manual
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    }
+
+    function liveExpiryTimestamp() {
+      return Timestamp.fromMillis(Date.now() + LIVE_SESSION_TTL_HOURS * 3600 * 1000);
+    }
+
+    async function startLiveSession(name) {
+      try {
+        if (!db) return null;
+        if (!liveSessionCode) {
+          liveSessionCode = sessionStorage.getItem('matika_live_code');
+        }
+        if (!liveSessionCode) {
+          liveSessionCode = genLiveSessionCode();
+          sessionStorage.setItem('matika_live_code', liveSessionCode);
+        }
+        await setDoc(doc(db, 'liveSessions', liveSessionCode), {
+          name,
+          level: null, levelName: null, method: null, methodName: null,
+          soalIndex: 0, totalSoal: 0, score: 0, lastAnswerCorrect: null,
+          status: 'menunggu',
+          startedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          expiresAt: liveExpiryTimestamp()
+        }, { merge: true });
+        return liveSessionCode;
+      } catch (e) {
+        console.warn('[Analytics] Gagal memulai sesi pantauan:', e);
+        return null;
+      }
+    }
+
+    async function updateLiveSession(patch) {
+      try {
+        if (!db || !liveSessionCode) return;
+        await setDoc(doc(db, 'liveSessions', liveSessionCode), {
+          ...patch,
+          updatedAt: serverTimestamp(),
+          expiresAt: liveExpiryTimestamp() // perpanjang TTL selama masih aktif bermain
+        }, { merge: true });
+      } catch (e) { console.warn('[Analytics] Gagal update sesi pantauan:', e); }
+    }
+
+    async function endLiveSession() {
+      const code = liveSessionCode;
+      liveSessionCode = null;
+      sessionStorage.removeItem('matika_live_code');
+      try {
+        if (db && code) await deleteDoc(doc(db, 'liveSessions', code));
+      } catch (e) { console.warn('[Analytics] Gagal mengakhiri sesi pantauan:', e); }
+    }
+
+    // Cadangan best-effort: coba bersihkan sesi live saat tab benar-benar ditutup.
+    // Tidak dijamin selalu berhasil (browser bisa memotong proses saat unload),
+    // makanya field expiresAt (TTL) di atas tetap jadi jaring pengaman utama.
+    window.addEventListener('pagehide', () => {
+      if (db && liveSessionCode) {
+        try { deleteDoc(doc(db, 'liveSessions', liveSessionCode)); } catch (e) { /* abaikan */ }
+      }
+    });
+
     window.__analytics = {
       updateVisitorName, updateSessionLevel, logResult,
       loginGoogle, logoutAdmin,
-      getAdminStatus: () => isAdminFlag
+      getAdminStatus: () => isAdminFlag,
+      startLiveSession, updateLiveSession, endLiveSession,
+      getLiveCode: () => liveSessionCode
     };
     initVisitor();
   </script>

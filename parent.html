@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Pantauan Orang Tua — Game Matematika Anak</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0a2e;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+    }
+
+    .wrap { width: 100%; max-width: 420px; }
+
+    h1 {
+      font-size: 1.15rem;
+      text-align: center;
+      margin: 0 0 4px;
+    }
+
+    p.sub {
+      text-align: center;
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.55);
+      margin: 0 0 22px;
+    }
+
+    /* ===== INPUT KODE ===== */
+    .code-entry {
+      background: rgba(255, 255, 255, 0.06);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 26px 22px;
+      text-align: center;
+    }
+
+    input#code-input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      font-family: inherit;
+      margin-bottom: 14px;
+    }
+
+    input#code-input:focus { border-color: #FFD93D; }
+
+    .btn-watch {
+      width: 100%;
+      padding: 13px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #4D96FF, #6BCB77);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .btn-watch:active { transform: scale(0.98); }
+
+    .msg { font-size: 0.82rem; margin-top: 12px; min-height: 18px; }
+    .msg.error { color: #FF6B6B; }
+    .msg.info { color: rgba(255, 255, 255, 0.5); }
+
+    /* ===== LIVE VIEW ===== */
+    #live-view { display: none; }
+
+    .live-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 24px 22px;
+      text-align: center;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 16px;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .status-menunggu { background: rgba(255, 217, 61, 0.18); color: #FFD93D; }
+    .status-bermain { background: rgba(107, 203, 119, 0.18); color: #6BCB77; }
+    .status-selesai { background: rgba(77, 150, 255, 0.18); color: #4D96FF; }
+    .status-ended { background: rgba(255, 107, 107, 0.18); color: #FF6B6B; }
+
+    .live-name { font-size: 1.3rem; font-weight: 900; margin-bottom: 4px; }
+    .live-level { font-size: 0.9rem; color: rgba(255, 255, 255, 0.65); margin-bottom: 20px; }
+
+    .progress-wrap {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 50px;
+      height: 14px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FFD93D, #FF922B);
+      border-radius: 50px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 20px;
+    }
+
+    .score-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+
+    .score-box .snum { font-size: 2rem; font-weight: 900; color: #FFD93D; }
+    .score-box .slabel { font-size: 0.72rem; color: rgba(255, 255, 255, 0.5); }
+
+    .last-answer-badge {
+      display: inline-block;
+      font-size: 1.6rem;
+      margin-bottom: 6px;
+      min-height: 30px;
+    }
+
+    .live-updated {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.35);
+      margin-top: 14px;
+    }
+
+    .btn-back {
+      width: 100%;
+      margin-top: 16px;
+      padding: 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6BCB77;
+      margin-right: 6px;
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>👨‍👩‍👧 Pantauan Orang Tua</h1>
+    <p class="sub">Lihat progres bermain anak secara real-time</p>
+
+    <div id="code-entry" class="code-entry">
+      <input type="text" id="code-input" placeholder="KODE6" maxlength="6" autocomplete="off">
+      <button class="btn-watch" onclick="startWatching()">👀 Mulai Pantau</button>
+      <div class="msg" id="entry-msg"></div>
+    </div>
+
+    <div id="live-view">
+      <div class="live-card">
+        <div id="status-badge" class="status-badge status-menunggu">Menunggu...</div>
+        <div class="live-name" id="live-name">—</div>
+        <div class="live-level" id="live-level">Belum memilih level</div>
+
+        <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        <div class="progress-label" id="progress-label">Soal 0 dari 0</div>
+
+        <div class="last-answer-badge" id="last-answer-badge"></div>
+
+        <div class="score-row">
+          <div class="score-box">
+            <div class="snum" id="live-score">0</div>
+            <div class="slabel">SKOR</div>
+          </div>
+        </div>
+
+        <div class="live-updated" id="live-updated"><span class="pulse-dot"></span>Live — diperbarui otomatis</div>
+      </div>
+      <button class="btn-back" onclick="stopWatching()">← Pantau Kode Lain</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { firebaseConfig } from './firebase-config.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+    import {
+      getFirestore, doc, onSnapshot, deleteDoc, Timestamp
+    } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let unsubscribe = null;
+    let lastKnownData = null;
+
+    // Prefill dari ?code=XXXXXX (hasil scan QR)
+    const params = new URLSearchParams(location.search);
+    const prefill = (params.get('code') || '').toUpperCase();
+    if (prefill) {
+      document.getElementById('code-input').value = prefill;
+      // Auto-mulai pantau jika kode datang dari QR/link
+      setTimeout(() => window.startWatching(), 150);
+    }
+
+    window.startWatching = function () {
+      const codeRaw = document.getElementById('code-input').value.trim().toUpperCase();
+      const msgEl = document.getElementById('entry-msg');
+      msgEl.textContent = '';
+      msgEl.className = 'msg';
+
+      if (!codeRaw || codeRaw.length < 4) {
+        msgEl.textContent = 'Masukkan kode sesi yang valid.';
+        msgEl.classList.add('error');
+        return;
+      }
+
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      lastKnownData = null;
+
+      msgEl.textContent = 'Menghubungkan...';
+      msgEl.classList.add('info');
+
+      unsubscribe = onSnapshot(doc(db, 'liveSessions', codeRaw), (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          // Sesi ini sudah lewat waktu tapi belum sempat terhapus (mis. tab anak
+          // ditutup mendadak) — bersihkan sekarang & tampilkan sebagai berakhir.
+          const isExpired = data.expiresAt && data.expiresAt.toMillis && data.expiresAt.toMillis() < Date.now();
+          if (isExpired) {
+            deleteDoc(doc(db, 'liveSessions', codeRaw)).catch(() => { });
+            lastKnownData = data;
+            renderLive(lastKnownData, true);
+          } else {
+            lastKnownData = data;
+            renderLive(lastKnownData, false);
+          }
+          document.getElementById('code-entry').style.display = 'none';
+          document.getElementById('live-view').style.display = 'block';
+        } else {
+          // Sesi tidak ada / sudah dihapus (otomatis dibersihkan saat berakhir)
+          if (lastKnownData) {
+            renderLive(lastKnownData, true);
+            document.getElementById('code-entry').style.display = 'none';
+            document.getElementById('live-view').style.display = 'block';
+          } else {
+            msgEl.textContent = 'Kode tidak ditemukan atau sesi sudah berakhir.';
+            msgEl.classList.add('error');
+          }
+        }
+      }, (err) => {
+        msgEl.textContent = 'Gagal terhubung. Cek koneksi internet.';
+        msgEl.classList.add('error');
+        console.warn(err);
+      });
+    };
+
+    window.stopWatching = function () {
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      lastKnownData = null;
+      document.getElementById('code-entry').style.display = 'block';
+      document.getElementById('live-view').style.display = 'none';
+      document.getElementById('code-input').value = '';
+      document.getElementById('entry-msg').textContent = '';
+    };
+
+    function renderLive(data, ended) {
+      const badge = document.getElementById('status-badge');
+      const updatedEl = document.getElementById('live-updated');
+
+      if (ended) {
+        badge.textContent = 'Sesi Berakhir';
+        badge.className = 'status-badge status-ended';
+        updatedEl.innerHTML = 'Sesi ini sudah selesai & datanya otomatis dihapus.';
+      } else if (data.status === 'selesai') {
+        badge.textContent = '✅ Selesai Bermain';
+        badge.className = 'status-badge status-selesai';
+        updatedEl.innerHTML = '<span class="pulse-dot"></span>Live — diperbarui otomatis';
+      } else if (data.status === 'bermain') {
+        badge.textContent = '🎮 Sedang Bermain';
+        badge.className = 'status-badge status-bermain';
+        updatedEl.innerHTML = '<span class="pulse-dot"></span>Live — diperbarui otomatis';
+      } else {
+        badge.textContent = '⏳ Menunggu Mulai';
+        badge.className = 'status-badge status-menunggu';
+        updatedEl.innerHTML = '<span class="pulse-dot"></span>Live — diperbarui otomatis';
+      }
+
+      document.getElementById('live-name').textContent = data.name || '—';
+      document.getElementById('live-level').textContent = data.levelName
+        ? `${data.levelName}${data.methodName ? ' · ' + data.methodName : ''}`
+        : 'Belum memilih level';
+
+      const total = data.totalSoal || 0;
+      const idx = Math.min(data.soalIndex || 0, total);
+      const pct = total ? Math.round((idx / total) * 100) : 0;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-label').textContent = total ? `Soal ${idx} dari ${total}` : 'Belum mulai soal';
+
+      document.getElementById('live-score').textContent = data.score ?? 0;
+
+      const lastBadge = document.getElementById('last-answer-badge');
+      if (data.lastAnswerCorrect === true) lastBadge.textContent = '✅ Jawaban terakhir benar!';
+      else if (data.lastAnswerCorrect === false) lastBadge.textContent = '❌ Jawaban terakhir salah';
+      else lastBadge.textContent = '';
+    }
+  </script>
+</body>
+
+</html>

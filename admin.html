@@ -427,7 +427,8 @@
       onAuthStateChanged, signOut
     } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js';
     import {
-      getFirestore, collection, getDocs, query, orderBy, limit
+      getFirestore, collection, getDocs, query, orderBy, limit,
+      where, deleteDoc, Timestamp
     } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
 
     const app = initializeApp(firebaseConfig);
@@ -464,6 +465,17 @@
 
     window.doLogout = function () { signOut(auth); };
 
+    // Bersih-bersih sesi live yang kedaluwarsa — tanpa perlu TTL Firestore
+    // (dijalankan tiap kali admin berhasil login, karena kunjungan admin jarang
+    // & datanya sensitif untuk dilihat, jadi titik yang pas untuk beres-beres).
+    async function cleanupExpiredLiveSessions() {
+      try {
+        const q = query(collection(db, 'liveSessions'), where('expiresAt', '<=', Timestamp.now()), limit(50));
+        const snap = await getDocs(q);
+        await Promise.all(snap.docs.map((d) => deleteDoc(d.ref).catch(() => { })));
+      } catch (e) { console.warn('[Cleanup] gagal:', e); }
+    }
+
     onAuthStateChanged(auth, async (user) => {
       const loginScreen = document.getElementById('login-screen');
       const dashScreen = document.getElementById('dash-screen');
@@ -473,6 +485,7 @@
         document.getElementById('who-text').textContent = `Masuk sebagai ${user.email}`;
         initPeriodeYearOptions();
         setDefaultLogFilters();
+        cleanupExpiredLiveSessions();
         await loadAllData();
         applyPeriodeFilter();
         applyLogFilter();
