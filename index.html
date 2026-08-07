@@ -3041,6 +3041,14 @@
       const box = document.getElementById('live-modal-body');
       const code = window.__analytics?.getLiveCode?.();
 
+      // Kalau sesi sebelumnya sudah diakhiri (kode kosong) tapi anak sudah
+      // mengisi nama / sedang main, aktifkan ulang otomatis dengan kode baru.
+      if (!code && playerName) {
+        box.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.55)">Mengaktifkan ulang sesi pantauan...</p>`;
+        window.__analytics?.startLiveSession(playerName).then(() => renderLiveModalContent());
+        return;
+      }
+
       if (!code) {
         box.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.55)">
           Masukkan namamu dan mulai main dulu untuk mengaktifkan pemantauan orang tua 😊

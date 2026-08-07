@@ -313,7 +313,7 @@
     .fb-who { font-weight: 700; font-size: 0.92rem; }
     .fb-email { font-size: 0.75rem; color: #4D96FF; }
     .fb-noemail { font-size: 0.75rem; color: rgba(255,255,255,0.35); }
-    .fb-time { font-size: 0.72rem; color: rgba(255,255,255,0.4); white-space: nowrap; }
+    .fb-time { font-size: 0.75rem; color: rgba(255,255,255,0.55); white-space: nowrap; font-weight: 600; }
 
     .fb-message {
       font-size: 0.88rem;
@@ -948,7 +948,9 @@
       }
 
       body.innerHTML = list.map((f) => {
-        const waktu = f._date ? f._date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+        const waktu = f._date ? f._date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Waktu tidak tersedia';
+        const waktuBalas = f.repliedAt ? tsToDate(f.repliedAt) : null;
+        const waktuBalasStr = waktuBalas ? waktuBalas.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : null;
         const statusClass = f.status === 'dibalas' ? 'fb-status-dibalas' : 'fb-status-baru';
         const statusLabel = f.status === 'dibalas' ? 'Sudah Dibalas' : 'Baru';
         const emailHtml = f.email
@@ -956,7 +958,7 @@
           : `<span class="fb-noemail">Tanpa email (tidak bisa dibalas)</span>`;
 
         const replyHtml = f.reply
-          ? `<div class="fb-reply-box"><span class="fb-reply-label">Balasan Anda:</span>${escapeHtml(f.reply)}</div>`
+          ? `<div class="fb-reply-box"><span class="fb-reply-label">Balasan Anda${waktuBalasStr ? ' — ' + waktuBalasStr : ''}:</span>${escapeHtml(f.reply)}</div>`
           : '';
 
         const canReply = !!f.email;
@@ -971,7 +973,7 @@
               <div class="fb-who">${escapeHtml(f.name || 'Anonim')}</div>
               ${emailHtml}
             </div>
-            <div class="fb-time">${waktu}</div>
+            <div class="fb-time">🕒 ${waktu}</div>
           </div>
           <span class="fb-status ${statusClass}">${statusLabel}</span>
           <div class="fb-message">${escapeHtml(f.message)}</div>
@@ -1016,13 +1018,21 @@
           noteEl.textContent = 'Balasan tersimpan, mengirim email...';
           try {
             await window.emailjs.send(emailjsConfig.serviceId, emailjsConfig.templateId, {
+              // Dikirim dengan beberapa nama alias sekaligus (to_email/email, to_name/name, dst.)
+              // supaya cocok dengan field "To Email" di Template Settings EmailJS,
+              // apa pun nama variabel yang dipakai di sana.
               to_email: item.email,
+              email: item.email,
+              reply_to: item.email,
               to_name: item.name || 'Pemain',
+              name: item.name || 'Pemain',
               original_message: item.message,
-              reply_message: replyText
+              message: item.message,
+              reply_message: replyText,
+              time: new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
             });
             noteEl.style.color = '#6BCB77';
-            noteEl.textContent = '✅ Balasan tersimpan & email terkirim ke ' + item.email;
+            noteEl.textContent = '✅ Balasan tersimpan & email dikirim ke ' + item.email + ' (cek juga folder Spam kalau belum masuk).';
           } catch (e) {
             noteEl.style.color = '#FFD93D';
             noteEl.textContent = '⚠️ Balasan tersimpan, tapi email gagal terkirim (cek konfigurasi EmailJS).';
