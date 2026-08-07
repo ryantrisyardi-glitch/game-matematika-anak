@@ -1081,6 +1081,88 @@
 
     .admin-corner-btn:active { transform: scale(0.92); }
 
+    /* ===== TOMBOL INSTALL PWA (floating, pojok kiri atas) ===== */
+    .install-corner-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 500;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px 8px 10px;
+      border-radius: 50px;
+      border: 1px solid rgba(107, 203, 119, 0.45);
+      background: rgba(107, 203, 119, 0.16);
+      backdrop-filter: blur(4px);
+      color: #6BCB77;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      font-family: inherit;
+      animation: installPop 0.5s ease 0.3s both;
+    }
+
+    .install-corner-btn.show { display: flex; }
+    .install-corner-btn:active { transform: scale(0.95); }
+    .install-corner-btn .install-icon { font-size: 1rem; }
+
+    @keyframes installPop {
+      0% { transform: scale(0.6); opacity: 0; }
+      70% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ===== TOOLTIP PENEMUAN FITUR (mis. Pantauan Orang Tua) ===== */
+    .discover-tooltip {
+      position: fixed;
+      bottom: 66px;
+      right: 14px;
+      z-index: 499;
+      max-width: 190px;
+      background: #14143a;
+      border: 1px solid rgba(77, 150, 255, 0.4);
+      color: #fff;
+      font-size: 0.76rem;
+      line-height: 1.4;
+      padding: 9px 12px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .discover-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      right: 18px;
+      width: 12px;
+      height: 12px;
+      background: #14143a;
+      border-right: 1px solid rgba(77, 150, 255, 0.4);
+      border-bottom: 1px solid rgba(77, 150, 255, 0.4);
+      transform: rotate(45deg);
+    }
+
+    .discover-tooltip.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .live-corner-btn.pulse-attention {
+      animation: liveAttentionPulse 1.4s ease-in-out 3;
+    }
+
+    @keyframes liveAttentionPulse {
+      0%, 100% { box-shadow: 0 4px 14px rgba(77, 150, 255, 0.4); }
+      50% { box-shadow: 0 4px 24px rgba(77, 150, 255, 0.9), 0 0 0 8px rgba(77, 150, 255, 0.15); }
+    }
+
     .admin-modal-overlay {
       display: none;
       position: fixed;
@@ -1354,6 +1436,11 @@
 
   <!-- INTRO -->
   <!-- ADMIN CORNER BUTTON & BADGE -->
+  <!-- TOMBOL INSTALL PWA (floating, muncul otomatis kalau browser mendukung) -->
+  <button class="install-corner-btn" id="install-corner-btn" onclick="handleInstallClick()">
+    <span class="install-icon">⬇️</span> Install App
+  </button>
+
   <button class="admin-corner-btn" onclick="openAdminModal()" title="Login Admin">🔐</button>
   <div class="admin-mode-badge" id="admin-mode-badge">👑 Mode Admin</div>
 
@@ -1383,7 +1470,8 @@
   </div>
 
   <!-- LIVE SESSION (Pantauan Orang Tua) CORNER BUTTON & MODAL -->
-  <button class="live-corner-btn" onclick="openLiveModal()" title="Pantauan Orang Tua">📡</button>
+  <div class="discover-tooltip" id="live-discover-tip">👀 Orang tua bisa pantau progres main di sini, real-time!</div>
+  <button class="live-corner-btn" id="live-corner-btn" onclick="openLiveModal()" title="Pantauan Orang Tua">📡</button>
   <div class="live-modal-overlay" id="live-modal-overlay">
     <div class="live-modal-card">
       <h3>👨‍👩‍👧 Pantauan Orang Tua</h3>
@@ -1909,7 +1997,10 @@
       identifyPlayer(playerName);
       trackEvent('mulai_main');
       window.__analytics?.updateVisitorName(playerName);
-      window.__analytics?.startLiveSession(playerName);
+      // Sesi Pantauan Orang Tua sengaja TIDAK dibuat di sini — baru dibuat saat
+      // tombol 📡 pertama kali dibuka (lazy), supaya tidak ada sesi "menganggur"
+      // untuk pemain yang tidak memakai fitur ini sama sekali.
+      maybeShowLiveDiscoverHint();
       startBgMusic();
       // Simpan instance audio ke dalam variabel
       const welcomeAudio = playSound(AUDIO.welcome, 0.9);
@@ -3031,32 +3122,51 @@
     // ============================================================
     // PANTAUAN ORANG TUA (Live Session) — kode sesi + QR
     // ============================================================
+    // liveSessionState: 'idle' (belum pernah dibuat) | 'active' (sedang jalan)
+    // | 'ended' (sengaja diakhiri manual — JANGAN auto-buat ulang sampai user minta)
+    let liveSessionState = 'idle';
+
     function openLiveModal() {
       renderLiveModalContent();
       document.getElementById('live-modal-overlay').classList.add('show');
+      hideLiveDiscoverHint();
     }
     function closeLiveModal() { document.getElementById('live-modal-overlay').classList.remove('show'); }
 
     function renderLiveModalContent() {
       const box = document.getElementById('live-modal-body');
-      const code = window.__analytics?.getLiveCode?.();
 
-      // Kalau sesi sebelumnya sudah diakhiri (kode kosong) tapi anak sudah
-      // mengisi nama / sedang main, aktifkan ulang otomatis dengan kode baru.
-      if (!code && playerName) {
-        box.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.55)">Mengaktifkan ulang sesi pantauan...</p>`;
-        window.__analytics?.startLiveSession(playerName).then(() => renderLiveModalContent());
-        return;
-      }
-
-      if (!code) {
+      if (!playerName) {
         box.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.55)">
           Masukkan namamu dan mulai main dulu untuk mengaktifkan pemantauan orang tua 😊
         </p>`;
         return;
       }
 
-      const parentUrl = `${GAME_URL}parent.html?code=${code}`;
+      if (liveSessionState === 'ended') {
+        box.innerHTML = `
+          <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-bottom:14px">
+            Sesi pemantauan sudah diakhiri. Orang tua yang memakai kode/QR lama tidak akan
+            melihat progres lagi.
+          </p>
+          <button class="btn-admin-action btn-admin-dash" onclick="reactivateLiveSession()">🔄 Aktifkan Lagi</button>
+        `;
+        return;
+      }
+
+      // Belum pernah dibuat (idle) — buat sekarang, sekali saja (lazy, hanya saat modal dibuka).
+      const existingCode = window.__analytics?.getLiveCode?.();
+      if (!existingCode) {
+        box.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.55)">Menyiapkan sesi pantauan...</p>`;
+        window.__analytics?.startLiveSession(playerName).then((code) => {
+          if (code) { liveSessionState = 'active'; pushFullLiveState(); }
+          renderLiveModalContent();
+        });
+        return;
+      }
+
+      liveSessionState = 'active';
+      const parentUrl = `${GAME_URL}parent.html?code=${existingCode}`;
       const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(parentUrl)}`;
 
       box.innerHTML = `
@@ -3065,7 +3175,7 @@
         <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin:0 0 10px">
           Scan QR ini dari HP orang tua, atau ketik kode di bawah ini di halaman pantauan.
         </p>
-        <div class="live-code-display">${code}</div>
+        <div class="live-code-display">${existingCode}</div>
         <div class="admin-modal-actions">
           <button class="btn-admin-action btn-admin-dash" onclick="copyLiveLink('${parentUrl}')">🔗 Salin Link Pantauan</button>
           <button class="btn-admin-action btn-admin-logout" onclick="endLiveSessionUI()">🔴 Akhiri Sesi Pantau</button>
@@ -3082,9 +3192,34 @@
     }
 
     function endLiveSessionUI() {
-      window.__analytics?.endLiveSession();
+      window.__analytics?.endLiveSession(); // stop + HAPUS dokumen sesi di Firestore
+      liveSessionState = 'ended';
       renderLiveModalContent();
-      showToast('Sesi pemantauan diakhiri 👋', '');
+      showToast('Sesi pemantauan diakhiri & dihapus 👋', '');
+    }
+
+    function reactivateLiveSession() {
+      const box = document.getElementById('live-modal-body');
+      box.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.55)">Membuat sesi baru...</p>`;
+      window.__analytics?.startLiveSession(playerName).then((code) => {
+        liveSessionState = code ? 'active' : 'ended';
+        if (code) pushFullLiveState();
+        renderLiveModalContent();
+      });
+    }
+
+    // Kirim ulang seluruh status game saat ini ke sesi live yang baru dibuat/diaktifkan,
+    // supaya orang tua yang baru saja terhubung tidak melihat data kosong/basi
+    // walau sesi baru dibuat di tengah-tengah anak bermain.
+    function pushFullLiveState() {
+      if (!currentLevel || !soalList.length) return;
+      const modeLabel = currentKodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
+      const methodLabel = currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : 'Angka');
+      window.__analytics?.updateLiveSession({
+        level: currentLevel, levelName: namaLevel(currentLevel),
+        method: currentMethod, methodName: methodLabel,
+        soalIndex: currentSoal, totalSoal, score, status: 'bermain'
+      });
     }
 
     // ============================================================
@@ -3144,6 +3279,80 @@
         if (active?.id === 'screen-intro') submitNama();
       }
     });
+
+    // ============================================================
+    // PWA - Tombol Install (floating, tidak mengganggu)
+    // ============================================================
+    let deferredInstallPrompt = null;
+    const isStandaloneNow = () =>
+      window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOSDevice = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    function showInstallButton() {
+      if (isStandaloneNow()) return; // sudah terinstall, tidak perlu tampilkan apa pun
+      document.getElementById('install-corner-btn')?.classList.add('show');
+    }
+    function hideInstallButton() {
+      document.getElementById('install-corner-btn')?.classList.remove('show');
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      showInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      hideInstallButton();
+      showToast('Berhasil diinstall! Sekarang bisa dibuka dari layar utama 🎉', '');
+    });
+
+    function handleInstallClick() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then((choice) => {
+          deferredInstallPrompt = null;
+          if (choice.outcome === 'accepted') {
+            hideInstallButton();
+          } else {
+            showToast('Oke, bisa install lagi kapan saja lewat tombol ini 👍', '');
+          }
+        });
+        return;
+      }
+      // iOS Safari tidak mendukung prompt otomatis — tampilkan instruksi manual.
+      if (isIOSDevice()) {
+        showToast('Tap tombol Bagikan (⬆️) di Safari, lalu pilih "Tambah ke Layar Utama" 📲', '');
+      }
+    }
+
+    // Di iOS, beforeinstallprompt tidak pernah tersedia, jadi tampilkan tombolnya
+    // secara manual (kalau belum terinstall) supaya pengguna iOS tetap tahu caranya.
+    window.addEventListener('load', () => {
+      if (isIOSDevice() && !isStandaloneNow()) showInstallButton();
+    });
+
+    // ============================================================
+    // PANTAUAN ORANG TUA — hint penemuan fitur (muncul sekali saja)
+    // ============================================================
+    function hideLiveDiscoverHint() {
+      document.getElementById('live-discover-tip')?.classList.remove('show');
+      document.getElementById('live-corner-btn')?.classList.remove('pulse-attention');
+    }
+
+    function maybeShowLiveDiscoverHint() {
+      try {
+        if (localStorage.getItem('matika_seen_live_hint')) return;
+        localStorage.setItem('matika_seen_live_hint', '1');
+      } catch (e) { /* localStorage tak tersedia, tetap tampilkan sekali per sesi */ }
+
+      setTimeout(() => {
+        document.getElementById('live-discover-tip')?.classList.add('show');
+        document.getElementById('live-corner-btn')?.classList.add('pulse-attention');
+        setTimeout(hideLiveDiscoverHint, 6000);
+      }, 1500);
+    }
 
     // ============================================================
     // PWA - Registrasi Service Worker
