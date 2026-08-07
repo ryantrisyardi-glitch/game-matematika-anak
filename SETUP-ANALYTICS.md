@@ -82,11 +82,14 @@ Pastikan struktur folder di server/hosting Anda seperti ini (satu folder yang sa
 /sw.js
 /manifest.json
 /firebase-config.js   ← file baru
+/emailjs-config.js      ← file baru (opsional, untuk balas email di Kritik & Saran)
 /admin.html            ← file baru
+/parent.html            ← file baru (halaman pantauan orang tua)
 ```
 
-`firebase-config.js` diimpor oleh `index.html` maupun `admin.html`, jadi harus
-berada di folder yang sama (root) dengan keduanya.
+`firebase-config.js` diimpor oleh `index.html`, `admin.html`, dan `parent.html`,
+`emailjs-config.js` diimpor oleh `admin.html` — jadi semuanya harus berada di
+folder yang sama (root) dengan file-file itu.
 
 ## Langkah 6 — Coba
 
@@ -113,6 +116,135 @@ modal login — pakai **Masuk dengan Google** dengan akun
 
 Cara lama (`?admin=ryan` di URL) tetap didukung sebagai cadangan, tapi kini
 tidak wajib — cukup login Google dari tombol pojok tersebut.
+
+---
+
+## Langkah 7 — Pembersihan Otomatis Sesi Live "Pantauan Orang Tua" (Gratis, Tanpa TTL)
+
+Kalau akun Firestore Anda masih di plan gratis (Spark) dan tidak melihat opsi
+TTL, tidak masalah — fitur ini didesain supaya **tetap otomatis bersih tanpa
+TTL, tanpa Cloud Functions, dan tanpa upgrade plan apa pun**. Tidak ada langkah
+setup tambahan di Firebase Console untuk ini.
+
+Cara kerjanya: setiap dokumen sesi live punya field `expiresAt` (kedaluwarsa
+4 jam sejak update terakhir). Alih-alih mengandalkan TTL server, setiap
+browser yang membuka **game**, **admin.html**, atau **parent.html** ikut
+membantu membersihkan sesi-sesi yang sudah lewat `expiresAt`-nya:
+- Di **game** (`index.html`): dijalankan otomatis di background, maksimal
+  1x per 6 jam per browser (dicatat di localStorage supaya tidak
+  berulang-ulang pada satu perangkat).
+- Di **admin.html**: dijalankan setiap kali superadmin berhasil login.
+- Di **parent.html**: kalau orang tua kebetulan membuka sesi yang ternyata
+  sudah kedaluwarsa (belum sempat terhapus), halaman itu langsung
+  menghapusnya saat itu juga sambil menampilkan "Sesi Berakhir".
+
+Karena ini murni query + delete biasa (bukan fitur premium), semuanya masuk
+kuota gratis Firestore (read/write harian gratis Spark plan sudah lebih dari
+cukup untuk pola pakai seperti ini).
+
+## Cara Pakai — Pantauan Orang Tua
+
+Saat anak bermain (setelah mengisi nama), tombol bulat 📡 muncul di pojok
+kanan bawah. Tombol ini membuka kode sesi 6 karakter + QR code:
+- **Orang tua scan QR** dari HP lain → langsung terhubung ke `parent.html`
+  dan melihat progres secara **real-time** (level yang dimainkan, soal
+  ke berapa, skor berjalan, benar/salah jawaban terakhir) — tanpa perlu
+  install apa pun atau login.
+- Atau orang tua bisa membuka `parent.html` sendiri lalu mengetik kode
+  6 karakter secara manual.
+- Anak bisa menutup sesi kapan saja lewat tombol **"🔴 Akhiri Sesi Pantau"**
+  di modal yang sama.
+
+**Soal auto-clear:** data sesi live otomatis terhapus saat:
+1. Anak/orang tua menekan **"Akhiri Sesi Pantau"** (langsung, seketika).
+2. Tab game ditutup — dicoba dibersihkan otomatis saat itu juga (best-effort,
+   tidak 100% terjamin karena browser bisa memutus proses saat halaman
+   ditutup).
+3. **Pembersihan otomatis sisi client** (lihat Langkah 7 di atas) — jaring
+   pengaman terakhir yang jalan otomatis lewat browser siapa pun yang buka
+   game/dashboard/pantauan, sepenuhnya gratis, tanpa perlu TTL Firestore atau
+   Cloud Functions.
+
+Jadi datanya tidak akan menumpuk selamanya — selalu ada jalur pembersihannya,
+dan semuanya kompatibel dengan akun Firestore gratis (Spark plan).
+
+Catatan: QR code dibuat lewat layanan gratis `api.qrserver.com` (butuh
+koneksi internet untuk menampilkan gambar QR-nya). Kalau QR gagal dimuat,
+kode 6 karakter di bawahnya tetap bisa diketik manual di `parent.html`,
+jadi fitur tetap berfungsi.
+
+## Layar Anak Ikut Ditampilkan Live (Cermin Layar)
+
+Di `parent.html`, selain skor & progres, orang tua sekarang juga melihat:
+- **Soal yang sedang dikerjakan** (persis seperti tampil di layar anak,
+  termasuk emoji untuk Mode Kode).
+- **Jawaban yang sedang diketik anak** — update live tiap anak mengetik
+  (dengan jeda kecil ~250ms supaya tidak membebani Firestore).
+- **Legend Mode Kode** (simbol = angka) beserta status disembunyikan/
+  ditampilkan, dan **timer memorizing** yang berjalan — semuanya sinkron
+  dengan yang dilihat anak.
+
+Tidak perlu setup tambahan untuk ini — otomatis aktif begitu fitur Pantauan
+Orang Tua dipakai (Firestore sudah dikonfigurasi di langkah-langkah di atas).
+
+---
+
+## Kritik & Saran (dengan Balasan Email dari Superadmin)
+
+Tombol 💬 di pojok kiri bawah halaman game membuka form Kritik & Saran:
+Nama (opsional), Email (opsional — disebutkan jelas ke pemain bahwa ini
+untuk keperluan dibalas), dan Pesan (wajib). Semua masukan masuk ke
+collection `feedback` di Firestore dan bisa dibaca superadmin di
+`admin.html`, bagian "💬 Kritik & Saran".
+
+**Membalas masukan** hanya tersedia untuk masukan yang menyertakan email.
+Ada 2 lapis:
+1. **Selalu tersimpan** — balasan Anda otomatis tersimpan di Firestore
+   (field `reply`) begitu Anda menekan "Kirim Balasan", terlepas dari
+   langkah 2 berhasil atau tidak.
+2. **Terkirim sungguhan ke email pemain** — ini opsional, lewat layanan
+   gratis **EmailJS** (tanpa perlu server sendiri). Kalau belum
+   dikonfigurasi, dashboard akan memberi tahu bahwa balasan tersimpan tapi
+   email belum benar-benar terkirim.
+
+### Setup EmailJS (opsional, gratis, ±5 menit)
+
+1. Daftar di https://www.emailjs.com (free plan: 200 email/bulan, tanpa
+   kartu kredit).
+2. **Email Services** → **Add New Service** → hubungkan akun Gmail/Outlook
+   Anda → salin **Service ID**.
+3. **Email Templates** → **Create New Template**. Contoh isi template:
+   ```
+   Subject : Balasan untuk masukanmu di Game Matematika Anak
+
+   Halo {{to_name}},
+
+   Terima kasih sudah kirim masukan:
+   "{{original_message}}"
+
+   Berikut balasan dari kami:
+   {{reply_message}}
+
+   Salam,
+   Tim Game Matematika Anak
+   ```
+   Pastikan kolom **"To Email"** di pengaturan template diisi `{{to_email}}`.
+   Simpan, lalu salin **Template ID**.
+4. **Account → General** → salin **Public Key**.
+5. Buka file `emailjs-config.js`, isi ketiga nilai tadi:
+   ```js
+   export const emailjsConfig = {
+     serviceId: 'service_xxxxxxx',
+     templateId: 'template_xxxxxxx',
+     publicKey: 'xxxxxxxxxxxxxxxx'
+   };
+   ```
+6. Upload ulang `emailjs-config.js` ke hosting. Selesai — sekarang tombol
+   "Kirim Balasan" di dashboard akan benar-benar mengirim email ke pemain.
+
+Kalau Anda tidak ingin memakai fitur ini, biarkan `emailjs-config.js` kosong
+seperti bawaannya — semua tetap berfungsi normal, hanya balasannya tidak
+terkirim sebagai email sungguhan (hanya tersimpan di dashboard).
 
 ---
 

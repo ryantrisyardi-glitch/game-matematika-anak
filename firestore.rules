@@ -26,5 +26,23 @@ service cloud.firestore {
       allow create: if true;
       allow read, update, delete: if isSuperadmin();
     }
+
+    // Pantauan Orang Tua (live session) — ephemeral, tanpa login.
+    // Kode sesi 6 karakter berfungsi sebagai "kunci" akses (mirip link Kahoot/Meet):
+    // siapa pun yang punya kode/QR boleh baca & tulis progres sesi tersebut.
+    // Dokumen ini tidak berisi data pribadi selain nama depan yang anak isi sendiri.
+    // Dibersihkan otomatis lewat kombinasi: tombol "Akhiri Sesi", best-effort saat
+    // tab ditutup, dan query pembersihan sisi-client berdasarkan field expiresAt
+    // (lihat SETUP-ANALYTICS.md) — didesain agar tetap gratis tanpa TTL Firestore.
+    match /liveSessions/{code} {
+      allow read, create, update, delete: if true;
+    }
+
+    // Kritik & Saran — siapa saja boleh mengirim (nama & email opsional).
+    // Hanya superadmin yang boleh membaca daftar masukan & menambahkan balasan.
+    match /feedback/{feedbackId} {
+      allow create: if true;
+      allow read, update, delete: if isSuperadmin();
+    }
   }
 }

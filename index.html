@@ -1177,7 +1177,8 @@
     .admin-mode-badge {
       position: fixed;
       top: 10px;
-      left: 10px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 500;
       background: rgba(204, 93, 232, 0.25);
       color: #CC5DE8;
@@ -1187,6 +1188,8 @@
       font-size: 0.7rem;
       font-weight: 700;
       display: none;
+      white-space: nowrap;
+      pointer-events: none;
     }
 
     .admin-mode-badge.show { display: block; }
@@ -1259,6 +1262,61 @@
       border-radius: 12px;
       padding: 10px;
       margin-bottom: 12px;
+    }
+
+    /* ===== KRITIK & SARAN ===== */
+    .feedback-corner-btn {
+      position: fixed;
+      bottom: 14px;
+      left: 14px;
+      z-index: 500;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #FF922B, #FF6B6B);
+      color: #fff;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 4px 14px rgba(255, 107, 107, 0.4);
+    }
+
+    .feedback-corner-btn:active { transform: scale(0.92); }
+
+    .feedback-modal-card textarea,
+    .feedback-modal-card input[type="text"],
+    .feedback-modal-card input[type="email"] {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      outline: none;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .feedback-modal-card input:focus,
+    .feedback-modal-card textarea:focus { border-color: #FFD93D; }
+
+    .feedback-modal-card label {
+      display: block;
+      text-align: left;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin: 0 0 4px 2px;
+    }
+
+    .feedback-optional-tag {
+      color: rgba(255, 255, 255, 0.35);
+      font-weight: 400;
     }
 
     /* ===== TOAST ===== */
@@ -1335,6 +1393,26 @@
     </div>
   </div>
 
+  <!-- KRITIK & SARAN CORNER BUTTON & MODAL -->
+  <button class="feedback-corner-btn" onclick="openFeedbackModal()" title="Kritik & Saran">💬</button>
+  <div class="live-modal-overlay" id="feedback-modal-overlay">
+    <div class="live-modal-card feedback-modal-card">
+      <h3>💬 Kritik &amp; Saran</h3>
+      <p class="live-sub">Punya masukan buat game ini? Kami dengar kok! 😊</p>
+      <div id="feedback-form-area">
+        <label>Nama <span class="feedback-optional-tag">(opsional)</span></label>
+        <input type="text" id="fb-nama" placeholder="Nama kamu / orang tua" maxlength="40">
+        <label>Email <span class="feedback-optional-tag">(opsional — isi kalau ingin dibalas)</span></label>
+        <input type="email" id="fb-email" placeholder="nama@email.com" maxlength="80">
+        <label>Kritik / Saran <span style="color:#FF6B6B">*</span></label>
+        <textarea id="fb-pesan" rows="4" maxlength="500" placeholder="Tulis kritik, saran, atau ide fitur di sini..."></textarea>
+        <div id="feedback-msg" style="font-size:0.8rem;min-height:16px;margin-bottom:8px"></div>
+        <button class="btn-admin-action btn-admin-dash" onclick="kirimFeedback()">📨 Kirim</button>
+      </div>
+      <button class="btn-admin-action btn-admin-close" style="margin-top:10px" onclick="closeFeedbackModal()">Tutup</button>
+    </div>
+  </div>
+
   <div id="screen-intro" class="screen active">
     <div class="card">
       <h1>🎮 Game<br>Matematika</h1>
@@ -1405,7 +1483,7 @@
 
   <!-- KODE TIER SELECT -->
   <div id="screen-kode-tier" class="screen">
-    <h2>🔤 Mode Kode</h2>
+    <h2>🧠 Mode Kode</h2>
     <p class="sub" id="kode-tier-sub">Pilih jumlah simbol dalam soal!</p>
     <div class="tier-grid">
       <div class="tier-card" onclick="pilihKodeTier(2)">
@@ -1435,7 +1513,7 @@
         <div class="tdesc">Kode tampil sebentar dengan timer,<br>lalu sembunyi otomatis. Latih ingatanmu!</div>
       </div>
       <div class="tier-card" onclick="pilihKodeMetode('normal')">
-        <div class="tsample">👁️ 🔤</div>
+        <div class="tsample">👀 🧠</div>
         <div class="tname">Normal</div>
         <div class="tdesc">Kode selalu terlihat.<br>Kamu bisa sembunyikan manual kapan saja.</div>
       </div>
@@ -1874,7 +1952,7 @@
         <div class="mdesc">Langsung jawab soal angka.<br>10 soal cepat!</div>
       </div>
       <div class="method-card" onclick="pilihMetodeKode(${lv})">
-        <div class="icon">🔤</div>
+        <div class="icon">🧠</div>
         <div class="mname">Mode Kode</div>
         <div class="mdesc">Simbol = angka rahasia.<br>Pecahkan kodenya!</div>
       </div>`;
@@ -2081,9 +2159,15 @@
   `;
       document.getElementById('inp-pic1').focus();
       document.getElementById('hint-text').textContent = `Hitung dulu jumlah ${obj1.name} di atas 👆`;
+      window.__analytics?.updateLiveSession({
+        currentQuestionDisplay: `${obj1.char.repeat(Math.min(soal.a, 6))} ${soal.op} ${obj2.char.repeat(Math.min(soal.b, 6))} = ?`,
+        currentAnswerTyped: '', kodeSymbols: null, kodeValues: null,
+        kodeValuesVisible: null, kodeMode: null, kodeSoalRevealed: null, kodeTimerSeconds: null
+      });
     }
 
     function cekPic1(el) {
+      pushLiveTypedAnswer(el.value);
       if (pic1Locked) return;
       const soal = soalList[currentSoal];
       const raw = el.value.replace(/\D/g, '');
@@ -2105,6 +2189,7 @@
     }
 
     function cekPic2(el) {
+      pushLiveTypedAnswer(el.value);
       if (pic2Locked) return;
       const soal = soalList[currentSoal];
       const raw = el.value.replace(/\D/g, '');
@@ -2126,6 +2211,7 @@
     }
 
     function cekResult(el) {
+      pushLiveTypedAnswer(el.value);
       const soal = soalList[currentSoal];
       const raw = el.value.replace(/[^0-9\-]/g, '');
       if (!raw || raw === '-') return;
@@ -2166,9 +2252,15 @@
     </div>
   `;
       setTimeout(() => document.getElementById('inp-ans')?.focus(), 60);
+      window.__analytics?.updateLiveSession({
+        currentQuestionDisplay: `${soal.a} ${soal.op} ${soal.b} = ?`,
+        currentAnswerTyped: '', kodeSymbols: null, kodeValues: null,
+        kodeValuesVisible: null, kodeMode: null, kodeSoalRevealed: null, kodeTimerSeconds: null
+      });
     }
 
     function cekJawaban(el) {
+      pushLiveTypedAnswer(el.value);
       if (waitingNext) return;
       const soal = soalList[currentSoal];
       const raw = el.value.replace(/[^0-9\-]/g, '');
@@ -2273,6 +2365,18 @@
         ? 'Hafalkan dulu ya, soal belum bisa dijawab sebelum waktu habis 🧠'
         : 'Hafalkan dulu ya, tekan tombol untuk memulai soal 🧠';
       clearKodeTimer();
+
+      // Kirim soal + status kode (legend, mode, visibilitas) ke Pantauan Orang Tua
+      let equationDisplay = soal.symbols[0];
+      for (let i = 0; i < soal.ops.length; i++) equationDisplay += ` ${soal.ops[i]} ${soal.symbols[i + 1]}`;
+      window.__analytics?.updateLiveSession({
+        currentQuestionDisplay: `${equationDisplay} = ?`,
+        currentAnswerTyped: '',
+        kodeSymbols: soal.symbols, kodeValues: soal.values,
+        kodeValuesVisible: true, kodeMode: currentKodeMode, kodeSoalRevealed: false,
+        kodeTimerSeconds: isMemorizing ? kodeAutoHideSeconds(soal.lv, soal.tier) : null
+      });
+
       if (isMemorizing) {
         kodeCountdown = kodeAutoHideSeconds(soal.lv, soal.tier);
         updateKodeTimerBadge();
@@ -2284,6 +2388,7 @@
             if (!kodeManualOverride) setKodeVisibility(false, true);
           } else {
             updateKodeTimerBadge();
+            window.__analytics?.updateLiveSession({ kodeTimerSeconds: kodeCountdown });
           }
         }, 1000);
       }
@@ -2317,7 +2422,7 @@
       const wrap = document.getElementById('kode-legend-wrap');
       if (wrap) wrap.classList.toggle('kode-hidden', !visible);
       const btn = document.getElementById('kode-toggle-btn');
-      if (btn) btn.innerHTML = visible ? '🙈 Sembunyikan' : '👁️ Tampilkan Lagi';
+      if (btn) btn.innerHTML = visible ? '🙈 Sembunyikan' : '👀 Tampilkan Lagi';
 
       // Soal baru muncul begitu kode disembunyikan untuk PERTAMA KALINYA —
       // baik karena timer memorizing habis, maupun karena ditekan manual (mode normal/manual).
@@ -2330,6 +2435,7 @@
           setTimeout(() => document.getElementById('inp-ans-kode')?.focus(), 60);
         }
       }
+      window.__analytics?.updateLiveSession({ kodeValuesVisible: visible, kodeSoalRevealed });
     }
 
     function toggleKodeVisibility() {
@@ -2339,6 +2445,7 @@
     }
 
     function cekJawabanKode(el) {
+      pushLiveTypedAnswer(el.value);
       if (waitingNext) return;
       const soal = soalList[currentSoal];
       const raw = el.value.replace(/[^0-9\-]/g, '');
@@ -2872,6 +2979,13 @@
     // tanpa perlu URL khusus
     // ============================================================
     let isAdminSession = false;
+    let liveTypedTimer = null;
+    function pushLiveTypedAnswer(val) {
+      clearTimeout(liveTypedTimer);
+      liveTypedTimer = setTimeout(() => {
+        window.__analytics?.updateLiveSession({ currentAnswerTyped: val });
+      }, 250); // debounce ringan supaya tidak menulis Firestore di setiap ketukan
+    }
 
     function openAdminModal() { document.getElementById('admin-modal-overlay').classList.add('show'); }
     function closeAdminModal() { document.getElementById('admin-modal-overlay').classList.remove('show'); }
@@ -2963,6 +3077,54 @@
       window.__analytics?.endLiveSession();
       renderLiveModalContent();
       showToast('Sesi pemantauan diakhiri 👋', '');
+    }
+
+    // ============================================================
+    // KRITIK & SARAN
+    // ============================================================
+    function openFeedbackModal() {
+      document.getElementById('feedback-msg').textContent = '';
+      document.getElementById('feedback-modal-overlay').classList.add('show');
+    }
+    function closeFeedbackModal() { document.getElementById('feedback-modal-overlay').classList.remove('show'); }
+
+    function kirimFeedback() {
+      const nama = document.getElementById('fb-nama').value.trim();
+      const email = document.getElementById('fb-email').value.trim();
+      const pesan = document.getElementById('fb-pesan').value.trim();
+      const msgEl = document.getElementById('feedback-msg');
+
+      if (!pesan) {
+        msgEl.style.color = '#FF6B6B';
+        msgEl.textContent = 'Tulis dulu kritik/sarannya ya 😊';
+        return;
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msgEl.style.color = '#FF6B6B';
+        msgEl.textContent = 'Format email sepertinya belum benar.';
+        return;
+      }
+
+      msgEl.style.color = 'rgba(255,255,255,0.5)';
+      msgEl.textContent = 'Mengirim...';
+
+      window.__analytics?.submitFeedback({
+        name: nama || 'Anonim',
+        email: email || null,
+        message: pesan
+      }).then((ok) => {
+        if (ok) {
+          document.getElementById('fb-nama').value = '';
+          document.getElementById('fb-email').value = '';
+          document.getElementById('fb-pesan').value = '';
+          msgEl.style.color = '#6BCB77';
+          msgEl.textContent = 'Terkirim! Terima kasih atas masukannya 🙏';
+          trackEvent('kirim_feedback', { hasEmail: !!email });
+        } else {
+          msgEl.style.color = '#FF6B6B';
+          msgEl.textContent = 'Gagal mengirim. Coba lagi ya.';
+        }
+      });
     }
 
     // ============================================================
@@ -3328,12 +3490,36 @@
       }
     });
 
+    // ============================================================
+    // KRITIK & SARAN
+    // ============================================================
+    async function submitFeedback({ name, email, message }) {
+      try {
+        if (!db) return false;
+        await addDoc(collection(db, 'feedback'), {
+          name: name || 'Anonim',
+          email: email || null,
+          message,
+          visitorId,
+          createdAt: serverTimestamp(),
+          status: 'baru',
+          reply: null,
+          repliedAt: null
+        });
+        return true;
+      } catch (e) {
+        console.warn('[Analytics] Gagal kirim feedback:', e);
+        return false;
+      }
+    }
+
     window.__analytics = {
       updateVisitorName, updateSessionLevel, logResult,
       loginGoogle, logoutAdmin,
       getAdminStatus: () => isAdminFlag,
       startLiveSession, updateLiveSession, endLiveSession,
-      getLiveCode: () => liveSessionCode
+      getLiveCode: () => liveSessionCode,
+      submitFeedback
     };
     initVisitor();
   </script>

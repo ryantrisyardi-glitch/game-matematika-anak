@@ -181,6 +181,78 @@
       50% { opacity: 0.3; }
       100% { opacity: 1; }
     }
+
+    /* ===== MIRROR (cermin layar anak) ===== */
+    .mirror-title {
+      font-size: 0.85rem;
+      color: #FFD93D;
+      margin: 0 0 14px;
+      text-align: center;
+    }
+
+    .mirror-question {
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+      word-break: break-word;
+    }
+
+    .mirror-kode-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .mirror-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      padding: 6px 10px;
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .mirror-chip .mc-val { color: #FFD93D; }
+    .mirror-chip.mc-hidden .mc-val { color: rgba(255, 255, 255, 0.35); }
+
+    .mirror-kode-status {
+      text-align: center;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 14px;
+    }
+
+    .mirror-kode-status .mk-timer {
+      color: #FFD93D;
+      font-weight: 800;
+    }
+
+    .mirror-answer-label {
+      text-align: center;
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 6px;
+    }
+
+    .mirror-answer-box {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #6BCB77;
+      background: rgba(107, 203, 119, 0.1);
+      border: 2px solid rgba(107, 203, 119, 0.35);
+      border-radius: 12px;
+      padding: 10px;
+      min-height: 24px;
+      letter-spacing: 2px;
+    }
   </style>
 </head>
 
@@ -215,6 +287,20 @@
 
         <div class="live-updated" id="live-updated"><span class="pulse-dot"></span>Live — diperbarui otomatis</div>
       </div>
+
+      <div class="live-card mirror-card" id="mirror-card" style="display:none;margin-top:14px">
+        <h3 class="mirror-title">🖥️ Layar Anak (Live)</h3>
+        <div class="mirror-question" id="mirror-question">—</div>
+
+        <div id="mirror-kode-wrap" style="display:none">
+          <div class="mirror-kode-legend" id="mirror-kode-legend"></div>
+          <div id="mirror-kode-status" class="mirror-kode-status"></div>
+        </div>
+
+        <div class="mirror-answer-label">Sedang diketik anak:</div>
+        <div class="mirror-answer-box" id="mirror-answer">&nbsp;</div>
+      </div>
+
       <button class="btn-back" onclick="stopWatching()">← Pantau Kode Lain</button>
     </div>
   </div>
@@ -341,6 +427,46 @@
       if (data.lastAnswerCorrect === true) lastBadge.textContent = '✅ Jawaban terakhir benar!';
       else if (data.lastAnswerCorrect === false) lastBadge.textContent = '❌ Jawaban terakhir salah';
       else lastBadge.textContent = '';
+
+      // ---- Cermin layar anak: soal, kode (legend/timer/hide-show), & jawaban yang diketik ----
+      const mirrorCard = document.getElementById('mirror-card');
+      if (ended || data.status === 'selesai' || !data.currentQuestionDisplay) {
+        mirrorCard.style.display = 'none';
+        return;
+      }
+      mirrorCard.style.display = 'block';
+
+      document.getElementById('mirror-question').textContent = data.currentQuestionDisplay;
+
+      const kodeWrap = document.getElementById('mirror-kode-wrap');
+      if (data.kodeSymbols && data.kodeSymbols.length) {
+        kodeWrap.style.display = 'block';
+        const legendEl = document.getElementById('mirror-kode-legend');
+        const visible = data.kodeValuesVisible !== false;
+        legendEl.innerHTML = data.kodeSymbols.map((sym, i) => `
+          <div class="mirror-chip${visible ? '' : ' mc-hidden'}">
+            <span>${sym}</span><span>=</span>
+            <span class="mc-val">${visible ? (data.kodeValues?.[i] ?? '?') : '❓'}</span>
+          </div>`).join('');
+
+        const statusEl = document.getElementById('mirror-kode-status');
+        const modeLabel = data.kodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
+        let statusText = `Mode: ${modeLabel} · `;
+        if (data.kodeSoalRevealed) {
+          statusText += visible ? 'Kode sedang ditampilkan lagi' : 'Kode disembunyikan — sedang mengerjakan soal';
+        } else {
+          statusText += 'Sedang menghafal kode...';
+        }
+        if (typeof data.kodeTimerSeconds === 'number') {
+          statusText += ` <span class="mk-timer">⏳ ${data.kodeTimerSeconds}s</span>`;
+        }
+        statusEl.innerHTML = statusText;
+      } else {
+        kodeWrap.style.display = 'none';
+      }
+
+      const answerEl = document.getElementById('mirror-answer');
+      answerEl.textContent = data.currentAnswerTyped || '\u00A0';
     }
   </script>
 </body>
