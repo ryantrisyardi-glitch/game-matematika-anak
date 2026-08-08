@@ -383,6 +383,84 @@
       font-size: clamp(2rem, 9vw, 3.2rem);
     }
 
+    /* ===== KRIPTARITMA (mode baru: SEND+MORE=MONEY style) ===== */
+    .kripto-equation {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(6px, 2.5vw, 14px);
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .eq-letters {
+      font-size: clamp(1.6rem, 7vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #FFD93D;
+    }
+
+    .kripto-instruksi {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .kripto-inputs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .kripto-input-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .kripto-input-box label {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #4D96FF;
+    }
+
+    .kripto-digit-input {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      text-align: center;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .kripto-digit-input:focus { border-color: #FFD93D; }
+    .kripto-digit-input:disabled { opacity: 0.6; }
+
+    .btn-kripto-check {
+      background: linear-gradient(135deg, #4D96FF, #6BCB77);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    .btn-kripto-check:active { transform: scale(0.96); }
+    .btn-kripto-check:disabled { opacity: 0.5; }
+
     .tier-grid {
       display: flex;
       gap: 16px;
@@ -2046,6 +2124,11 @@
         <div class="icon">🧠</div>
         <div class="mname">Mode Kode</div>
         <div class="mdesc">Simbol = angka rahasia.<br>Pecahkan kodenya!</div>
+      </div>
+      <div class="method-card" onclick="mulaiGame(${lv},4)">
+        <div class="icon">🧩</div>
+        <div class="mname">Kriptaritma</div>
+        <div class="mdesc">Huruf = angka rahasia, tebak sendiri!<br>Ala SEND+MORE=MONEY 🔎</div>
       </div>`;
       grid.innerHTML = html;
     }
@@ -2072,15 +2155,15 @@
       totalSoal = soalList.length;
       trackEvent('mulai_game', { level: lv, method: method, kodeTier: currentKodeTier, kodeMode: currentKodeMode });
       const modeLabel = currentKodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
-      const levelLabel = method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat · ${modeLabel}` : `${namaLevel(lv)} · ${method === 1 ? 'Gambar' : 'Angka'}`;
+      const methodLabel = method === 1 ? 'Gambar' : (method === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : (method === 4 ? 'Kriptaritma' : 'Angka'));
+      const levelLabel = method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat · ${modeLabel}` : `${namaLevel(lv)} · ${methodLabel}`;
       window.__analytics?.updateSessionLevel(levelLabel);
-      const methodLabel = method === 1 ? 'Gambar' : (method === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : 'Angka');
       window.__analytics?.updateLiveSession({
         level: lv, levelName: namaLevel(lv), method, methodName: methodLabel,
         soalIndex: 0, totalSoal, score: 0, status: 'bermain', lastAnswerCorrect: null
       });
       document.getElementById('info-level').textContent =
-        method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier}T · ${modeLabel}` : namaLevel(lv);
+        (method === 3 || method === 4) ? `${namaLevel(lv)} · ${methodLabel}` : namaLevel(lv);
       showScreen('screen-game');
       tampilSoal();
     }
@@ -2103,6 +2186,10 @@
       if (method === 3) {
         const n = (kodeTier === 3) ? 5 : 10;
         return Array.from({ length: n }, () => ({ ...buatSatuSoalKode(lv, kodeTier), userAns: null, correct: false }));
+      }
+      if (method === 4) {
+        const n = 5;
+        return Array.from({ length: n }, () => ({ ...buatSatuSoalKripto(lv), userAns: null, correct: false }));
       }
       const n = (method === 1) ? 5 : 10;
       return Array.from({ length: n }, () => ({ ...buatSatuSoal(lv), userAns: null, correct: false }));
@@ -2157,6 +2244,57 @@
 
       return { symbols, values, ops, ans, mode: 'kode', lv, tier };
     }
+
+    // ---- GENERATOR SOAL KRIPTARITMA (SEND+MORE=MONEY style) ----
+    // Huruf mewakili digit unik. Soal dibuat dari penjumlahan bilangan asli
+    // (supaya arahnya selalu benar secara matematis), lalu tiap digit unik
+    // yang muncul diberi huruf acak. Jawaban divalidasi ulang secara aljabar
+    // dari isian pemain (bukan cuma dicocokkan ke kunci internal), supaya adil
+    // walau ada kemungkinan pemetaan alternatif yang juga valid.
+    const KRIPTO_LETTER_POOL = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'R', 'S', 'T', 'U', 'V', 'W'];
+    function kriptoConfig(lv) {
+      return {
+        1: { len1: 1, len2: 1, minLetters: 2, maxLetters: 3 },
+        2: { len1: 2, len2: 1, minLetters: 3, maxLetters: 4 },
+        3: { len1: 2, len2: 2, minLetters: 4, maxLetters: 5 },
+        4: { len1: 2, len2: 2, minLetters: 5, maxLetters: 6 }
+      }[lv] || { len1: 2, len2: 1, minLetters: 3, maxLetters: 4 };
+    }
+    function buatSatuSoalKripto(lv) {
+      const cfg = kriptoConfig(lv);
+      function randNum(len) {
+        const min = len === 1 ? 1 : Math.pow(10, len - 1);
+        const max = Math.pow(10, len) - 1;
+        return rInt(min, max);
+      }
+
+      let word1, word2, sumVal, distinctDigits, attempt = 0;
+      do {
+        word1 = randNum(cfg.len1);
+        word2 = randNum(cfg.len2);
+        sumVal = word1 + word2;
+        const allDigitsStr = `${word1}${word2}${sumVal}`;
+        distinctDigits = [...new Set(allDigitsStr.split(''))];
+        attempt++;
+      } while ((distinctDigits.length < cfg.minLetters || distinctDigits.length > cfg.maxLetters) && attempt < 300);
+
+      const letterPool = shuffleArray(KRIPTO_LETTER_POOL);
+      const digitToLetter = {};
+      distinctDigits.forEach((d, i) => { digitToLetter[d] = letterPool[i]; });
+      const toLetters = (numStr) => numStr.split('').map((d) => digitToLetter[d]).join('');
+
+      const letterWord1 = toLetters(String(word1));
+      const letterWord2 = toLetters(String(word2));
+      const letterSum = toLetters(String(sumVal));
+      const uniqueLetters = distinctDigits.map((d) => digitToLetter[d]).sort();
+      const leadingLetters = [...new Set([letterWord1[0], letterWord2[0], letterSum[0]])];
+
+      return {
+        mode: 'kripto', lv,
+        letterWord1, letterWord2, letterSum, uniqueLetters, leadingLetters,
+        numWord1: word1, numWord2: word2, numSum: sumVal
+      };
+    }
     function buatSatuSoal(lv) {
       let a, b, op;
       if (lv === 1) {
@@ -2206,6 +2344,7 @@
 
       if (currentLevel === 1 && currentMethod === 1) tampilGambar(soal, theme);
       else if (soal.mode === 'kode') tampilKode(soal, theme);
+      else if (soal.mode === 'kripto') tampilKripto(soal, theme);
       else tampilAngka(soal, theme);
     }
 
@@ -2572,6 +2711,101 @@
       }
     }
 
+    // ---- MODE KRIPTARITMA ----
+    function tampilKripto(soal, theme) {
+      const inputsHtml = soal.uniqueLetters.map((letter) => `
+      <div class="kripto-input-box">
+        <label>${letter}</label>
+        <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1"
+          class="kripto-digit-input" id="kdig-${letter}" oninput="updateKriptoLiveTyping()">
+      </div>`).join('');
+
+      document.getElementById('game-box').innerHTML = `
+    <div class="kripto-equation">
+      <span class="eq-letters">${soal.letterWord1}</span>
+      <span class="eq-op">+</span>
+      <span class="eq-letters">${soal.letterWord2}</span>
+      <span class="eq-equals">=</span>
+      <span class="eq-letters">${soal.letterSum}</span>
+    </div>
+    <p class="kripto-instruksi">Setiap huruf mewakili satu angka rahasia (0-9) yang berbeda. Cari tahu nilainya!</p>
+    <div class="kripto-inputs" id="kripto-inputs">${inputsHtml}</div>
+    <button class="btn-kripto-check" id="kripto-check-btn" onclick="cekJawabanKripto()">✅ Cek Jawaban</button>
+    <div id="next-wrap" style="display:none">
+      <button class="btn-next" onclick="lanjutSoal()">Lanjut →</button>
+    </div>
+  `;
+      setTimeout(() => document.getElementById(`kdig-${soal.uniqueLetters[0]}`)?.focus(), 60);
+
+      window.__analytics?.updateLiveSession({
+        currentQuestionDisplay: `${soal.letterWord1} + ${soal.letterWord2} = ${soal.letterSum}`,
+        currentAnswerTyped: '', kodeSymbols: null, kodeValues: null,
+        kodeValuesVisible: null, kodeMode: null, kodeSoalRevealed: null, kodeTimerSeconds: null
+      });
+    }
+
+    function updateKriptoLiveTyping() {
+      const soal = soalList[currentSoal];
+      if (!soal) return;
+      const parts = soal.uniqueLetters.map((l) => {
+        const v = document.getElementById(`kdig-${l}`)?.value || '_';
+        return `${l}=${v}`;
+      });
+      pushLiveTypedAnswer(parts.join(' '));
+    }
+
+    function cekJawabanKripto() {
+      if (waitingNext) return;
+      const soal = soalList[currentSoal];
+      const digits = {};
+
+      for (const letter of soal.uniqueLetters) {
+        const el = document.getElementById(`kdig-${letter}`);
+        const v = (el?.value || '').trim();
+        if (!/^[0-9]$/.test(v)) {
+          document.getElementById('hint-text').textContent = `Isi dulu semua kotaknya ya — huruf ${letter} masih kosong 😊`;
+          return;
+        }
+        digits[letter] = parseInt(v, 10);
+      }
+
+      const usedDigits = Object.values(digits);
+      if (new Set(usedDigits).size !== usedDigits.length) {
+        document.getElementById('hint-text').textContent = '❌ Ada dua huruf dengan angka yang sama — setiap huruf harus punya angka berbeda!';
+        playError();
+        return;
+      }
+      for (const l of soal.leadingLetters) {
+        if (digits[l] === 0) {
+          document.getElementById('hint-text').textContent = `❌ Huruf ${l} tidak boleh bernilai 0 (ada di depan angka).`;
+          playError();
+          return;
+        }
+      }
+
+      const wordVal = (letters) => letters.split('').reduce((acc, ch) => acc * 10 + digits[ch], 0);
+      const v1 = wordVal(soal.letterWord1), v2 = wordVal(soal.letterWord2), vs = wordVal(soal.letterSum);
+
+      soalList[currentSoal].userAns = { ...digits };
+      document.querySelectorAll('.kripto-digit-input').forEach((el) => { el.disabled = true; });
+      document.getElementById('kripto-check-btn').disabled = true;
+
+      if (v1 + v2 === vs) {
+        soalList[currentSoal].correct = true;
+        score += 2;
+        playCorrect();
+        document.getElementById('hint-text').textContent = `✅ Tepat sekali! ${soal.letterWord1}+${soal.letterWord2}=${soal.letterSum} → ${v1} + ${v2} = ${vs}`;
+        window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
+        setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1600);
+      } else {
+        waitingNext = true;
+        playError();
+        document.getElementById('hint-text').textContent = `❌ Belum pas. ${v1} + ${v2} = ${v1 + v2}, padahal seharusnya = ${vs}. Coba lihat jawaban benarnya lalu lanjut ya.`;
+        window.__analytics?.updateLiveSession({ soalIndex: currentSoal, score, lastAnswerCorrect: false });
+        document.getElementById('next-wrap').style.display = 'block';
+      }
+    }
+
     // ============================================================
     // HASIL
     // ============================================================
@@ -2616,14 +2850,24 @@
         let html = `<div class="review-title">📝 Soal yang perlu dipelajari lagi</div>`;
         soalList.forEach((s, i) => {
           if (!s.correct) {
-            const userStr = s.userAns !== null ? `Jawabanmu: <span class="review-user">${s.userAns}</span>` : 'Belum dijawab';
-            const soalTxt = s.mode === 'kode' ? soalKodeExprText(s) : `${s.a} ${s.op} ${s.b}`;
+            let soalTxt, ansTxt, userStr;
+            if (s.mode === 'kripto') {
+              soalTxt = `${s.letterWord1} + ${s.letterWord2} = ${s.letterSum}`;
+              ansTxt = `${s.numWord1} + ${s.numWord2} = ${s.numSum}`;
+              userStr = (s.userAns && typeof s.userAns === 'object')
+                ? `Jawabanmu: <span class="review-user">${Object.entries(s.userAns).map(([l, v]) => `${l}=${v}`).join(', ')}</span>`
+                : 'Belum dijawab';
+            } else {
+              soalTxt = s.mode === 'kode' ? soalKodeExprText(s) : `${s.a} ${s.op} ${s.b}`;
+              ansTxt = s.ans;
+              userStr = s.userAns !== null ? `Jawabanmu: <span class="review-user">${s.userAns}</span>` : 'Belum dijawab';
+            }
             html += `
         <div class="review-item">
           <span class="review-num">${i + 1}.</span>
           <span class="review-soal">${soalTxt}</span>
           <span class="review-ans">
-            = <span class="review-correct">${s.ans}</span><br>
+            = <span class="review-correct">${ansTxt}</span><br>
             <span style="font-size:0.78rem;color:rgba(255,255,255,0.45)">${userStr}</span>
           </span>
         </div>`;
@@ -2640,7 +2884,7 @@
         level: currentLevel,
         levelName: namaLevel(currentLevel),
         method: currentMethod,
-        methodName: currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier} Tingkat` : 'Angka'),
+        methodName: currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? 'Kriptaritma' : 'Angka')),
         kodeTier: currentKodeTier,
         score: displayScore,
         total: 10
@@ -2659,7 +2903,7 @@
     function buatShareText() {
       const score = parseInt(document.getElementById('result-score').textContent) || 0;
       const level = namaLevel(currentLevel);
-      const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : 'Metode Angka');
+      const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? 'Mode Kriptaritma' : 'Metode Angka'));
       const bar = '⭐'.repeat(score) + '☆'.repeat(10 - score);
       return `🎮 Game Matematika Anak\n👤 ${playerName} baru saja bermain!\n📚 ${level} · ${method}\n🏆 Skor: ${score}/10\n${bar}\n\nAyo main juga! 👇\n${GAME_URL}`;
     }
@@ -2669,7 +2913,7 @@
         try {
           const score = parseInt(document.getElementById('result-score').textContent) || 0;
           const level = namaLevel(currentLevel);
-          const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : 'Metode Angka');
+          const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? 'Mode Kriptaritma' : 'Metode Angka'));
           const emoji = document.getElementById('result-emoji').textContent;
 
           // Portrait 9:16-ish — cocok untuk story & feed
@@ -3214,7 +3458,7 @@
     function pushFullLiveState() {
       if (!currentLevel || !soalList.length) return;
       const modeLabel = currentKodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
-      const methodLabel = currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : 'Angka');
+      const methodLabel = currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : (currentMethod === 4 ? 'Kriptaritma' : 'Angka'));
       window.__analytics?.updateLiveSession({
         level: currentLevel, levelName: namaLevel(currentLevel),
         method: currentMethod, methodName: methodLabel,
