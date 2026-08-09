@@ -5,7 +5,7 @@
 
 // Naikkan angka versi ini setiap kali ada perubahan pada app shell
 // supaya service worker lama otomatis dibuang dan cache baru dibuat.
-const SW_VERSION = 'v6';
+const SW_VERSION = 'v7';
 const CACHE_NAME = 'matika-app-shell-' + SW_VERSION;
 const APP_SHELL = [
   './',

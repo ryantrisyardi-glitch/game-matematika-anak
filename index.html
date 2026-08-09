@@ -461,6 +461,163 @@
     .btn-kripto-check:active { transform: scale(0.96); }
     .btn-kripto-check:disabled { opacity: 0.5; }
 
+    .kripto-advance-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #FFD93D, #FF922B);
+      color: #1a1a2e;
+      font-weight: 900;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      padding: 5px 14px;
+      border-radius: 50px;
+      margin-bottom: 12px;
+    }
+
+    /* ===== MODE DUEL (multiplayer) ===== */
+    .duel-code-input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 1.3rem;
+      font-weight: 900;
+      letter-spacing: 5px;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+
+    .duel-code-input:focus { border-color: #FFD93D; }
+
+    .duel-code-big {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 8px;
+      color: #FFD93D;
+      background: rgba(255, 217, 61, 0.1);
+      border: 1px solid rgba(255, 217, 61, 0.35);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .duel-player-list {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 18px;
+    }
+
+    .duel-player-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 10px 16px;
+      margin-bottom: 8px;
+      font-size: 0.92rem;
+    }
+
+    .duel-player-row .dp-name { font-weight: 700; }
+    .duel-player-row .dp-host-badge {
+      background: rgba(255, 217, 61, 0.2);
+      color: #FFD93D;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 6px;
+    }
+    .duel-player-row .dp-progress { font-size: 0.78rem; color: rgba(255, 255, 255, 0.5); }
+    .duel-player-row .dp-finished { color: #6BCB77; font-weight: 700; }
+
+    .duel-mini-leaderboard {
+      width: 100%;
+      max-width: 420px;
+      margin: 14px 0;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      font-size: 0.78rem;
+    }
+
+    .duel-mini-leaderboard .dml-title {
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 0.7rem;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .duel-mini-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .duel-rank-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .duel-rank-tab {
+      padding: 8px 16px;
+      border-radius: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .duel-rank-tab.active {
+      background: linear-gradient(135deg, #FFD93D, #FF922B);
+      color: #1a1a2e;
+      border-color: transparent;
+    }
+
+    .duel-rank-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .duel-rank-row.rank-1 { border-color: rgba(255, 217, 61, 0.6); background: rgba(255, 217, 61, 0.1); }
+    .duel-rank-row.rank-2 { border-color: rgba(200, 200, 210, 0.5); }
+    .duel-rank-row.rank-3 { border-color: rgba(255, 146, 43, 0.4); }
+
+    .duel-rank-medal { font-size: 1.3rem; width: 30px; text-align: center; flex-shrink: 0; }
+    .duel-rank-info { flex: 1; }
+    .duel-rank-info .dr-name { font-weight: 800; font-size: 0.95rem; }
+    .duel-rank-info .dr-detail { font-size: 0.72rem; color: rgba(255, 255, 255, 0.5); }
+    .duel-rank-score { font-weight: 900; color: #FFD93D; font-size: 1.05rem; }
+
+    .duel-timer-live {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 10px;
+    }
+
     .tier-grid {
       display: flex;
       gap: 16px;
@@ -1616,6 +1773,11 @@
       </div>
     </div>
     <div class="level-share-row">
+      <button class="btn-share-sm" style="background:linear-gradient(135deg,#CC5DE8,#4D96FF)" onclick="openDuelMenu()">
+        <span>⚔️</span> Mode Duel — Main Bareng!
+      </button>
+    </div>
+    <div class="level-share-row">
       <p class="level-share-label">📤 Ajak teman main bareng!</p>
       <div class="share-row">
         <button class="btn-share-sm btn-whatsapp" onclick="bagikanUndanganWhatsApp()">
@@ -1686,6 +1848,134 @@
     </div>
     <div class="back-row">
       <button class="btn-ghost" onclick="showScreen('screen-kode-tier')">← Kembali</button>
+    </div>
+  </div>
+
+  <!-- KRIPTARITMA TIER SELECT (Normal vs Advance) -->
+  <div id="screen-kripto-tier" class="screen">
+    <h2>🧩 Kriptaritma</h2>
+    <p class="sub" id="kripto-tier-sub">Pilih tingkat kesulitannya!</p>
+    <div class="tier-grid">
+      <div class="tier-card" onclick="mulaiGame(currentLevel,4,0,null,'normal')">
+        <div class="tsample">AB+C=DE</div>
+        <div class="tname">Normal</div>
+        <div class="tdesc">Menyesuaikan level yang dipilih.<br>3-6 huruf tergantung level.</div>
+      </div>
+      <div class="tier-card" onclick="mulaiGame(currentLevel,4,0,null,'advance')">
+        <div class="tsample">🏆 SEND+MORE</div>
+        <div class="tname">Advance</div>
+        <div class="tdesc">Skala asli ala SEND+MORE=MONEY!<br>4 digit + 4 digit, sampai 8 huruf. Sangat menantang!</div>
+      </div>
+    </div>
+    <div class="back-row">
+      <button class="btn-ghost" onclick="showScreen('screen-method')">← Kembali ke Metode</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODE DUEL (Multiplayer real-time)
+  ============================================================ -->
+
+  <!-- DUEL: MENU (Buat Room / Gabung Room) -->
+  <div id="screen-duel-menu" class="screen">
+    <h2>⚔️ Mode Duel</h2>
+    <p class="sub">Main bareng 2 orang atau lebih, soal yang sama!</p>
+    <div class="tier-grid">
+      <div class="tier-card" onclick="showScreen('screen-duel-create')">
+        <div class="tsample">🏠</div>
+        <div class="tname">Buat Room</div>
+        <div class="tdesc">Jadi host, pilih level & soal,<br>ajak teman pakai kode.</div>
+      </div>
+      <div class="tier-card" onclick="showScreen('screen-duel-join')">
+        <div class="tsample">🔑</div>
+        <div class="tname">Gabung Room</div>
+        <div class="tdesc">Punya kode dari teman?<br>Masukkan di sini!</div>
+      </div>
+    </div>
+    <div class="back-row">
+      <button class="btn-ghost" onclick="showScreen('screen-level')">← Kembali</button>
+    </div>
+  </div>
+
+  <!-- DUEL: BUAT ROOM -->
+  <div id="screen-duel-create" class="screen">
+    <h2>🏠 Buat Room Duel</h2>
+    <p class="sub">Pilih level soal untuk semua pemain!</p>
+    <input type="text" id="duel-host-nama" class="duel-code-input" style="text-transform:none;letter-spacing:normal;font-size:1rem"
+      placeholder="Nama kamu" maxlength="20">
+    <div class="level-grid" style="margin-bottom:16px">
+      <div class="level-card" onclick="buatRoomDuel(1)" style="border-color:rgba(255,217,61,0.38)">
+        <div class="icon">🌱</div><div class="lname" style="color:#FFD93D">Pemula</div>
+      </div>
+      <div class="level-card" onclick="buatRoomDuel(2)" style="border-color:rgba(107,203,119,0.38)">
+        <div class="icon">🌿</div><div class="lname" style="color:#6BCB77">Menengah</div>
+      </div>
+      <div class="level-card" onclick="buatRoomDuel(3)" style="border-color:rgba(77,150,255,0.38)">
+        <div class="icon">🌳</div><div class="lname" style="color:#4D96FF">Menengah Atas</div>
+      </div>
+      <div class="level-card" onclick="buatRoomDuel(4)" style="border-color:rgba(204,93,232,0.38)">
+        <div class="icon">🏆</div><div class="lname" style="color:#CC5DE8">Atas</div>
+      </div>
+    </div>
+    <div id="duel-create-msg" style="font-size:0.85rem;min-height:18px"></div>
+    <div class="back-row">
+      <button class="btn-ghost" onclick="showScreen('screen-duel-menu')">← Kembali</button>
+    </div>
+  </div>
+
+  <!-- DUEL: GABUNG ROOM -->
+  <div id="screen-duel-join" class="screen">
+    <h2>🔑 Gabung Room</h2>
+    <p class="sub">Masukkan kode dari temanmu!</p>
+    <input type="text" id="duel-join-nama" class="duel-code-input" style="text-transform:none;letter-spacing:normal;font-size:1rem"
+      placeholder="Nama kamu" maxlength="20">
+    <input type="text" id="duel-join-code" class="duel-code-input" placeholder="KODE5" maxlength="5">
+    <button class="btn-main btn-yellow" onclick="gabungRoomDuel()">Gabung! 🚀</button>
+    <div id="duel-join-msg" style="font-size:0.85rem;min-height:18px;margin-top:10px"></div>
+    <div class="back-row">
+      <button class="btn-ghost" onclick="showScreen('screen-duel-menu')">← Kembali</button>
+    </div>
+  </div>
+
+  <!-- DUEL: LOBBY (menunggu pemain lain) -->
+  <div id="screen-duel-lobby" class="screen">
+    <h2>⏳ Lobi Duel</h2>
+    <p class="sub" id="duel-lobby-sub">Menunggu pemain lain bergabung...</p>
+    <div class="duel-code-big" id="duel-lobby-code">-----</div>
+    <div class="duel-player-list" id="duel-lobby-players"></div>
+    <div id="duel-lobby-actions"></div>
+    <div class="back-row">
+      <button class="btn-ghost" onclick="tinggalkanRoomDuel()">← Tinggalkan Room</button>
+    </div>
+  </div>
+
+  <!-- DUEL: GAME (main bareng) -->
+  <div id="screen-duel-game" class="screen">
+    <div class="game-header">
+      <button class="btn-ghost" onclick="tinggalkanRoomDuel()">← Keluar</button>
+      <div class="soal-num" id="duel-soal-counter">Soal 1/10</div>
+      <div class="info">⚔️ Duel</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="duel-prog-fill" style="width:0%"></div>
+    </div>
+    <div class="game-box" id="duel-game-box"></div>
+    <p class="hint-text" id="duel-hint-text"></p>
+    <div class="duel-mini-leaderboard" id="duel-mini-leaderboard"></div>
+  </div>
+
+  <!-- DUEL: HASIL & RANKING -->
+  <div id="screen-duel-result" class="screen">
+    <h2>🏁 Hasil Duel</h2>
+    <p class="sub" id="duel-result-sub">Menunggu semua pemain selesai...</p>
+    <div class="duel-rank-tabs">
+      <button class="duel-rank-tab active" id="duel-tab-final" onclick="tampilkanRankingDuel('final')">🏆 Ranking Gabungan</button>
+      <button class="duel-rank-tab" id="duel-tab-speed" onclick="tampilkanRankingDuel('speed')">⚡ Tercepat</button>
+      <button class="duel-rank-tab" id="duel-tab-correct" onclick="tampilkanRankingDuel('correct')">✅ Nilai Tertinggi</button>
+    </div>
+    <div id="duel-rank-list" style="width:100%;display:flex;flex-direction:column;align-items:center"></div>
+    <div class="back-row">
+      <button class="btn-main btn-yellow" style="max-width:280px" onclick="tinggalkanRoomDuel()">Selesai</button>
     </div>
   </div>
 
@@ -2028,6 +2318,7 @@
     let currentLevel = 0, currentMethod = 0, currentKodeTier = 0;
     let currentKodeMode = 'normal'; // 'memorizing' | 'normal' — khusus Mode Kode
     let pendingKodeTier = 0; // dipakai saat proses pemilihan tingkat → metode kode
+    let currentKriptoTier = 'normal'; // 'normal' | 'advance' — khusus Kriptaritma
     let kodeValuesVisible = true, kodeManualOverride = false, kodeSoalRevealed = false;
     let kodeTimerInterval = null, kodeCountdown = 0;
     let currentSoal = 0, totalSoal = 0, score = 0;
@@ -2125,7 +2416,7 @@
         <div class="mname">Mode Kode</div>
         <div class="mdesc">Simbol = angka rahasia.<br>Pecahkan kodenya!</div>
       </div>
-      <div class="method-card" onclick="mulaiGame(${lv},4)">
+      <div class="method-card" onclick="pilihMetodeKripto(${lv})">
         <div class="icon">🧩</div>
         <div class="mname">Kriptaritma</div>
         <div class="mdesc">Huruf = angka rahasia, tebak sendiri!<br>Ala SEND+MORE=MONEY 🔎</div>
@@ -2137,6 +2428,11 @@
       document.getElementById('kode-tier-sub').textContent = `${namaLevel(lv)} — Pilih jumlah simbol dalam soal!`;
       showScreen('screen-kode-tier');
     }
+    function pilihMetodeKripto(lv) {
+      currentLevel = lv;
+      document.getElementById('kripto-tier-sub').textContent = `${namaLevel(lv)} — Pilih tingkat kesulitannya!`;
+      showScreen('screen-kripto-tier');
+    }
     function pilihKodeTier(tier) {
       trackEvent('pilih_kode_tier', { level: currentLevel, tier: tier });
       pendingKodeTier = tier;
@@ -2147,15 +2443,17 @@
       trackEvent('pilih_kode_metode', { level: currentLevel, tier: pendingKodeTier, mode });
       mulaiGame(currentLevel, 3, pendingKodeTier, mode);
     }
-    function mulaiGame(lv, method, kodeTier, kodeMode) {
+    function mulaiGame(lv, method, kodeTier, kodeMode, kriptoTier) {
       currentLevel = lv; currentMethod = method; currentKodeTier = kodeTier || 0;
       currentKodeMode = (method === 3) ? (kodeMode || currentKodeMode || 'normal') : 'normal';
+      currentKriptoTier = (method === 4) ? (kriptoTier || currentKriptoTier || 'normal') : 'normal';
       currentSoal = 0; score = 0; waitingNext = false;
-      soalList = buatSoal(lv, method, currentKodeTier);
+      soalList = buatSoal(lv, method, currentKodeTier, currentKriptoTier);
       totalSoal = soalList.length;
-      trackEvent('mulai_game', { level: lv, method: method, kodeTier: currentKodeTier, kodeMode: currentKodeMode });
+      trackEvent('mulai_game', { level: lv, method: method, kodeTier: currentKodeTier, kodeMode: currentKodeMode, kriptoTier: currentKriptoTier });
       const modeLabel = currentKodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
-      const methodLabel = method === 1 ? 'Gambar' : (method === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : (method === 4 ? 'Kriptaritma' : 'Angka'));
+      const kriptoLabel = currentKriptoTier === 'advance' ? 'Kriptaritma Advance' : 'Kriptaritma';
+      const methodLabel = method === 1 ? 'Gambar' : (method === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : (method === 4 ? kriptoLabel : 'Angka'));
       const levelLabel = method === 3 ? `${namaLevel(lv)} · Kode ${currentKodeTier} Tingkat · ${modeLabel}` : `${namaLevel(lv)} · ${methodLabel}`;
       window.__analytics?.updateSessionLevel(levelLabel);
       window.__analytics?.updateLiveSession({
@@ -2175,21 +2473,21 @@
     function kembaliDariGame() { clearKodeTimer(); showScreen('screen-method'); renderMethodScreen(currentLevel); }
     function mainLagi() {
       trackEvent('main_lagi', { level: currentLevel, method: currentMethod });
-      mulaiGame(currentLevel, currentMethod, currentKodeTier, currentKodeMode);
+      mulaiGame(currentLevel, currentMethod, currentKodeTier, currentKodeMode, currentKriptoTier);
     }
     function namaLevel(lv) { return ['', 'Level Pemula', 'Level Menengah', 'Menengah Atas', 'Level Atas'][lv]; }
 
     // ============================================================
     // SOAL GENERATOR
     // ============================================================
-    function buatSoal(lv, method, kodeTier) {
+    function buatSoal(lv, method, kodeTier, kriptoTier) {
       if (method === 3) {
         const n = (kodeTier === 3) ? 5 : 10;
         return Array.from({ length: n }, () => ({ ...buatSatuSoalKode(lv, kodeTier), userAns: null, correct: false }));
       }
       if (method === 4) {
         const n = 5;
-        return Array.from({ length: n }, () => ({ ...buatSatuSoalKripto(lv), userAns: null, correct: false }));
+        return Array.from({ length: n }, () => ({ ...buatSatuSoalKripto(lv, kriptoTier), userAns: null, correct: false }));
       }
       const n = (method === 1) ? 5 : 10;
       return Array.from({ length: n }, () => ({ ...buatSatuSoal(lv), userAns: null, correct: false }));
@@ -2252,7 +2550,11 @@
     // dari isian pemain (bukan cuma dicocokkan ke kunci internal), supaya adil
     // walau ada kemungkinan pemetaan alternatif yang juga valid.
     const KRIPTO_LETTER_POOL = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'R', 'S', 'T', 'U', 'V', 'W'];
-    function kriptoConfig(lv) {
+    function kriptoConfig(lv, tier) {
+      if (tier === 'advance') {
+        // Skala mendekati SEND+MORE=MONEY asli: 4 digit + 4 digit, sampai 8 huruf unik
+        return { len1: 4, len2: 4, minLetters: 7, maxLetters: 8 };
+      }
       return {
         1: { len1: 1, len2: 1, minLetters: 2, maxLetters: 3 },
         2: { len1: 2, len2: 1, minLetters: 3, maxLetters: 4 },
@@ -2260,8 +2562,9 @@
         4: { len1: 2, len2: 2, minLetters: 5, maxLetters: 6 }
       }[lv] || { len1: 2, len2: 1, minLetters: 3, maxLetters: 4 };
     }
-    function buatSatuSoalKripto(lv) {
-      const cfg = kriptoConfig(lv);
+    function buatSatuSoalKripto(lv, tier) {
+      const cfg = kriptoConfig(lv, tier);
+      const maxTry = tier === 'advance' ? 600 : 300;
       function randNum(len) {
         const min = len === 1 ? 1 : Math.pow(10, len - 1);
         const max = Math.pow(10, len) - 1;
@@ -2276,7 +2579,7 @@
         const allDigitsStr = `${word1}${word2}${sumVal}`;
         distinctDigits = [...new Set(allDigitsStr.split(''))];
         attempt++;
-      } while ((distinctDigits.length < cfg.minLetters || distinctDigits.length > cfg.maxLetters) && attempt < 300);
+      } while ((distinctDigits.length < cfg.minLetters || distinctDigits.length > cfg.maxLetters) && attempt < maxTry);
 
       const letterPool = shuffleArray(KRIPTO_LETTER_POOL);
       const digitToLetter = {};
@@ -2290,7 +2593,7 @@
       const leadingLetters = [...new Set([letterWord1[0], letterWord2[0], letterSum[0]])];
 
       return {
-        mode: 'kripto', lv,
+        mode: 'kripto', lv, tier: tier || 'normal',
         letterWord1, letterWord2, letterSum, uniqueLetters, leadingLetters,
         numWord1: word1, numWord2: word2, numSum: sumVal
       };
@@ -2720,7 +3023,13 @@
           class="kripto-digit-input" id="kdig-${letter}" oninput="updateKriptoLiveTyping()">
       </div>`).join('');
 
+      const isAdvance = soal.tier === 'advance';
+      const introText = isAdvance
+        ? '🏆 Mode Advance! Setiap huruf mewakili satu angka rahasia (0-9) yang berbeda. Ini level tersulit — semangat!'
+        : 'Setiap huruf mewakili satu angka rahasia (0-9) yang berbeda. Cari tahu nilainya!';
+
       document.getElementById('game-box').innerHTML = `
+    ${isAdvance ? '<div class="kripto-advance-badge">🏆 ADVANCE</div>' : ''}
     <div class="kripto-equation">
       <span class="eq-letters">${soal.letterWord1}</span>
       <span class="eq-op">+</span>
@@ -2728,7 +3037,7 @@
       <span class="eq-equals">=</span>
       <span class="eq-letters">${soal.letterSum}</span>
     </div>
-    <p class="kripto-instruksi">Setiap huruf mewakili satu angka rahasia (0-9) yang berbeda. Cari tahu nilainya!</p>
+    <p class="kripto-instruksi">${introText}</p>
     <div class="kripto-inputs" id="kripto-inputs">${inputsHtml}</div>
     <button class="btn-kripto-check" id="kripto-check-btn" onclick="cekJawabanKripto()">✅ Cek Jawaban</button>
     <div id="next-wrap" style="display:none">
@@ -2804,6 +3113,251 @@
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal, score, lastAnswerCorrect: false });
         document.getElementById('next-wrap').style.display = 'block';
       }
+    }
+
+    // ============================================================
+    // MODE DUEL (Multiplayer real-time)
+    // ============================================================
+    let duelRoomCode = null, duelIsHost = false, duelPlayerName = '';
+    let duelRoomData = null, duelPlayersData = [];
+    let duelUnsubRoom = null, duelUnsubPlayers = null;
+    let duelSoalList = [], duelTotalSoal = 0, duelCurrentSoal = 0, duelCorrectCount = 0;
+    let duelStartedAtMillis = null, duelFinished = false, duelGameStarted = false, duelWaitingNext = false;
+    let duelActiveRankTab = 'final';
+
+    function openDuelMenu() {
+      trackEvent('buka_menu_duel', {});
+      showScreen('screen-duel-menu');
+    }
+
+    function bersihkanListenerDuel() {
+      if (duelUnsubRoom) { duelUnsubRoom(); duelUnsubRoom = null; }
+      if (duelUnsubPlayers) { duelUnsubPlayers(); duelUnsubPlayers = null; }
+    }
+
+    async function buatRoomDuel(lv) {
+      const nama = document.getElementById('duel-host-nama').value.trim();
+      const msgEl = document.getElementById('duel-create-msg');
+      if (!nama) { msgEl.style.color = '#FF6B6B'; msgEl.textContent = 'Isi nama kamu dulu ya!'; return; }
+      msgEl.style.color = 'rgba(255,255,255,0.5)'; msgEl.textContent = 'Membuat room...';
+
+      duelPlayerName = nama;
+      const soalListDuel = buatSoal(lv, 2); // Metode Angka — 10 soal, sama untuk semua pemain
+      const code = await window.__analytics?.createDuelRoom({
+        hostName: nama, level: lv, levelName: namaLevel(lv),
+        method: 2, methodName: 'Angka (Duel)', soalList: soalListDuel
+      });
+
+      if (!code) { msgEl.style.color = '#FF6B6B'; msgEl.textContent = 'Gagal membuat room, coba lagi.'; return; }
+      duelRoomCode = code; duelIsHost = true;
+      trackEvent('duel_buat_room', { level: lv });
+      masukLobbyDuel();
+    }
+
+    async function gabungRoomDuel() {
+      const nama = document.getElementById('duel-join-nama').value.trim();
+      const code = document.getElementById('duel-join-code').value.trim().toUpperCase();
+      const msgEl = document.getElementById('duel-join-msg');
+      if (!nama) { msgEl.style.color = '#FF6B6B'; msgEl.textContent = 'Isi nama kamu dulu ya!'; return; }
+      if (!code) { msgEl.style.color = '#FF6B6B'; msgEl.textContent = 'Masukkan kode room.'; return; }
+      msgEl.style.color = 'rgba(255,255,255,0.5)'; msgEl.textContent = 'Menghubungkan...';
+
+      const result = await window.__analytics?.joinDuelRoom(code, nama);
+      if (!result?.ok) { msgEl.style.color = '#FF6B6B'; msgEl.textContent = result?.reason || 'Gagal gabung.'; return; }
+
+      duelRoomCode = code; duelPlayerName = nama;
+      duelIsHost = (result.room.hostVisitorId === window.__analytics?.getVisitorId?.());
+      trackEvent('duel_gabung_room', {});
+      masukLobbyDuel();
+    }
+
+    function masukLobbyDuel() {
+      showScreen('screen-duel-lobby');
+      document.getElementById('duel-lobby-code').textContent = duelRoomCode;
+      duelGameStarted = false; duelFinished = false;
+      bersihkanListenerDuel();
+
+      duelUnsubRoom = window.__analytics?.listenDuelRoom(duelRoomCode, (room) => {
+        duelRoomData = room;
+        if (!room) { showToast('Room sudah tidak ada.', 'red'); tinggalkanRoomDuel(); return; }
+        if (room.status === 'playing' && room.startedAt && !duelGameStarted) {
+          mulaiDuelGame(room);
+        }
+      });
+      duelUnsubPlayers = window.__analytics?.listenDuelPlayers(duelRoomCode, (players) => {
+        duelPlayersData = players;
+        if (document.getElementById('screen-duel-lobby')?.classList.contains('active')) renderLobbyDuel();
+        if (document.getElementById('screen-duel-game')?.classList.contains('active')) renderMiniLeaderboardDuel();
+        if (document.getElementById('screen-duel-result')?.classList.contains('active')) tampilkanRankingDuel(duelActiveRankTab);
+      });
+    }
+
+    function renderLobbyDuel() {
+      const list = document.getElementById('duel-lobby-players');
+      if (!list) return;
+      list.innerHTML = duelPlayersData.map((p) => `
+        <div class="duel-player-row">
+          <span class="dp-name">${p.name}${p.isHost ? '<span class="dp-host-badge">HOST</span>' : ''}</span>
+          <span>👋 Siap</span>
+        </div>`).join('');
+      document.getElementById('duel-lobby-sub').textContent = `${duelPlayersData.length} pemain sudah gabung`;
+
+      const actionsEl = document.getElementById('duel-lobby-actions');
+      if (duelIsHost) {
+        const cukup = duelPlayersData.length >= 2;
+        actionsEl.innerHTML = `
+          <button class="btn-main btn-yellow" style="max-width:280px" onclick="mulaiDuelSekarang()" ${cukup ? '' : 'disabled'}>
+            🚀 Mulai Duel (${duelPlayersData.length} pemain)
+          </button>
+          ${cukup ? '' : '<p style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:8px">Tunggu minimal 1 pemain lain gabung dulu</p>'}
+        `;
+      } else {
+        actionsEl.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.5)">Menunggu host memulai duel...</p>`;
+      }
+    }
+
+    function mulaiDuelSekarang() {
+      if (!duelIsHost || !duelRoomCode) return;
+      window.__analytics?.startDuelRoom(duelRoomCode);
+    }
+
+    function mulaiDuelGame(room) {
+      duelGameStarted = true;
+      duelSoalList = room.soalList;
+      duelTotalSoal = duelSoalList.length;
+      duelCurrentSoal = 0; duelCorrectCount = 0; duelFinished = false; duelWaitingNext = false;
+      duelStartedAtMillis = (room.startedAt && room.startedAt.toMillis) ? room.startedAt.toMillis() : Date.now();
+      trackEvent('duel_mulai_main', { level: room.level });
+      showScreen('screen-duel-game');
+      tampilSoalDuel();
+    }
+
+    function tampilSoalDuel() {
+      const soal = duelSoalList[duelCurrentSoal];
+      document.getElementById('duel-soal-counter').textContent = `Soal ${duelCurrentSoal + 1}/${duelTotalSoal}`;
+      document.getElementById('duel-prog-fill').style.width = `${(duelCurrentSoal / duelTotalSoal) * 100}%`;
+      document.getElementById('duel-hint-text').textContent = '';
+      document.getElementById('duel-game-box').innerHTML = `
+    <div class="equation-display">
+      <span class="eq-num" style="color:#FFD93D">${soal.a}</span>
+      <span class="eq-op">${soal.op}</span>
+      <span class="eq-num" style="color:#4D96FF">${soal.b}</span>
+      <span class="eq-equals">=</span>
+      <input class="answer-input" id="duel-inp-ans" type="text" inputmode="numeric"
+        pattern="[0-9-]*" placeholder="?" maxlength="4" autocomplete="off" oninput="cekJawabanDuel(this)">
+    </div>
+    <div id="duel-next-wrap" style="display:none">
+      <button class="btn-next" onclick="lanjutSoalDuel()">Lanjut →</button>
+    </div>
+  `;
+      setTimeout(() => document.getElementById('duel-inp-ans')?.focus(), 60);
+      window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: duelCurrentSoal, correctCount: duelCorrectCount });
+      renderMiniLeaderboardDuel();
+    }
+
+    function cekJawabanDuel(el) {
+      if (duelWaitingNext) return;
+      const soal = duelSoalList[duelCurrentSoal];
+      const raw = el.value.replace(/[^0-9\-]/g, '');
+      if (!raw || raw === '-') return;
+      const val = parseInt(raw, 10);
+
+      const absVal = Math.abs(val), absAns = Math.abs(soal.ans);
+      const lenVal = String(absVal).length, lenAns = String(absAns).length;
+      const tooBig = (soal.ans >= 0 && val > soal.ans) || (soal.ans < 0 && val > 0 && val > absAns);
+      if (!tooBig && lenVal < lenAns) return;
+
+      if (val === soal.ans) {
+        el.classList.remove('wrong'); el.classList.add('correct'); el.readOnly = true;
+        duelCorrectCount++;
+        playCorrect();
+        document.getElementById('duel-hint-text').textContent = `✅ Benar! ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
+        setTimeout(() => {
+          duelCurrentSoal++;
+          duelCurrentSoal >= duelTotalSoal ? selesaiDuelGame() : tampilSoalDuel();
+        }, 900);
+      } else {
+        el.classList.remove('correct'); el.classList.add('wrong'); el.readOnly = true;
+        duelWaitingNext = true;
+        playError();
+        document.getElementById('duel-hint-text').textContent = `❌ Jawaban yang benar: ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
+        document.getElementById('duel-next-wrap').style.display = 'block';
+      }
+    }
+
+    function lanjutSoalDuel() {
+      duelWaitingNext = false;
+      duelCurrentSoal++;
+      duelCurrentSoal >= duelTotalSoal ? selesaiDuelGame() : tampilSoalDuel();
+    }
+
+    function selesaiDuelGame() {
+      duelFinished = true;
+      const timeTakenMs = Date.now() - duelStartedAtMillis;
+      window.__analytics?.finishDuelPlayer(duelRoomCode, { correctCount: duelCorrectCount, timeTakenMs });
+      playResult(duelCorrectCount, duelTotalSoal);
+      showScreen('screen-duel-result');
+      duelActiveRankTab = 'final';
+      tampilkanRankingDuel('final');
+    }
+
+    function renderMiniLeaderboardDuel() {
+      const el = document.getElementById('duel-mini-leaderboard');
+      if (!el) return;
+      const sorted = [...duelPlayersData].sort((a, b) =>
+        (b.correctCount || 0) - (a.correctCount || 0) || (b.soalIndex || 0) - (a.soalIndex || 0));
+      el.innerHTML = `<div class="dml-title">Progres Pemain Lain</div>` + sorted.map((p) => `
+        <div class="duel-mini-row">
+          <span>${p.name}${p.finished ? ' ✅' : ''}</span>
+          <span>Soal ${Math.min((p.soalIndex || 0) + (p.finished ? 0 : 1), duelTotalSoal || 10)}/${duelTotalSoal || 10} · ${p.correctCount || 0} benar</span>
+        </div>`).join('');
+    }
+
+    function tampilkanRankingDuel(mode) {
+      duelActiveRankTab = mode;
+      document.querySelectorAll('.duel-rank-tab').forEach((t) => t.classList.remove('active'));
+      document.getElementById(`duel-tab-${mode}`)?.classList.add('active');
+
+      let sorted = [...duelPlayersData];
+      if (mode === 'speed') {
+        sorted = sorted.filter((p) => p.finished).sort((a, b) => (a.timeTakenMs || Infinity) - (b.timeTakenMs || Infinity));
+      } else if (mode === 'correct') {
+        sorted = sorted.sort((a, b) => (b.correctCount || 0) - (a.correctCount || 0));
+      } else {
+        sorted = sorted.sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+      }
+
+      const medals = ['🥇', '🥈', '🥉'];
+      const listEl = document.getElementById('duel-rank-list');
+      listEl.innerHTML = sorted.map((p, i) => {
+        const medal = medals[i] || `${i + 1}`;
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+        const waktuStr = p.timeTakenMs ? `${(p.timeTakenMs / 1000).toFixed(1)}s` : (p.finished ? '-' : 'Belum selesai');
+        let scoreDisplay;
+        if (mode === 'speed') scoreDisplay = waktuStr;
+        else if (mode === 'correct') scoreDisplay = `${p.correctCount || 0} benar`;
+        else scoreDisplay = p.finished ? (p.finalScore ?? '-') : '⏳';
+        return `
+        <div class="duel-rank-row ${rankClass}">
+          <div class="duel-rank-medal">${medal}</div>
+          <div class="duel-rank-info">
+            <div class="dr-name">${p.name}</div>
+            <div class="dr-detail">${p.correctCount || 0} benar · ${waktuStr}</div>
+          </div>
+          <div class="duel-rank-score">${scoreDisplay}</div>
+        </div>`;
+      }).join('') || '<p style="color:rgba(255,255,255,0.4);font-size:0.85rem">Belum ada pemain yang selesai.</p>';
+
+      const finishedCount = duelPlayersData.filter((p) => p.finished).length;
+      document.getElementById('duel-result-sub').textContent = `${finishedCount}/${duelPlayersData.length} pemain sudah selesai`;
+    }
+
+    function tinggalkanRoomDuel() {
+      bersihkanListenerDuel();
+      if (duelIsHost && duelRoomCode) window.__analytics?.closeDuelRoom(duelRoomCode);
+      duelRoomCode = null; duelIsHost = false; duelGameStarted = false; duelFinished = false;
+      duelPlayersData = []; duelRoomData = null; duelWaitingNext = false;
+      showScreen('screen-level');
     }
 
     // ============================================================
@@ -2884,7 +3438,7 @@
         level: currentLevel,
         levelName: namaLevel(currentLevel),
         method: currentMethod,
-        methodName: currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? 'Kriptaritma' : 'Angka')),
+        methodName: currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? (currentKriptoTier === 'advance' ? 'Kriptaritma Advance' : 'Kriptaritma') : 'Angka')),
         kodeTier: currentKodeTier,
         score: displayScore,
         total: 10
@@ -3458,7 +4012,7 @@
     function pushFullLiveState() {
       if (!currentLevel || !soalList.length) return;
       const modeLabel = currentKodeMode === 'memorizing' ? 'Memorizing' : 'Normal';
-      const methodLabel = currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : (currentMethod === 4 ? 'Kriptaritma' : 'Angka'));
+      const methodLabel = currentMethod === 1 ? 'Gambar' : (currentMethod === 3 ? `Kode ${currentKodeTier}T · ${modeLabel}` : (currentMethod === 4 ? (currentKriptoTier === 'advance' ? 'Kriptaritma Advance' : 'Kriptaritma') : 'Angka'));
       window.__analytics?.updateLiveSession({
         level: currentLevel, levelName: namaLevel(currentLevel),
         method: currentMethod, methodName: methodLabel,
@@ -3653,7 +4207,7 @@
     import {
       getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc,
       collection, serverTimestamp, increment, Timestamp,
-      query, where, limit, getDocs
+      query, where, limit, getDocs, onSnapshot
     } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
     import {
       getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
@@ -3688,6 +4242,7 @@
         if (now - last > 6 * 3600 * 1000) {
           localStorage.setItem('matika_last_cleanup', String(now));
           cleanupExpiredLiveSessions();
+          cleanupExpiredDuelRooms();
         }
       } catch (e) { /* localStorage tak tersedia — lewati */ }
     }
@@ -3974,13 +4529,133 @@
       }
     }
 
+    // ============================================================
+    // MODE DUEL (Multiplayer real-time) — room + pemain + ranking
+    // ============================================================
+    const DUEL_ROOM_TTL_HOURS = 3;
+    function genRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // hindari 0/O/1/I biar gak ambigu
+      let code = '';
+      for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    }
+    function duelExpiry() { return Timestamp.fromMillis(Date.now() + DUEL_ROOM_TTL_HOURS * 3600 * 1000); }
+
+    async function createDuelRoom({ hostName, level, levelName, method, methodName, soalList }) {
+      if (!db) return null;
+      let code = genRoomCode(), tries = 0;
+      // Pastikan kode belum dipakai room lain yang masih aktif (sangat jarang bentrok, tapi jaga-jaga)
+      while (tries < 5) {
+        const snap = await getDoc(doc(db, 'quizRooms', code)).catch(() => null);
+        if (!snap || !snap.exists()) break;
+        code = genRoomCode(); tries++;
+      }
+      try {
+        await setDoc(doc(db, 'quizRooms', code), {
+          hostName, hostVisitorId: visitorId,
+          level, levelName, method, methodName,
+          soalList, totalSoal: soalList.length,
+          status: 'waiting',
+          createdAt: serverTimestamp(), startedAt: null,
+          expiresAt: duelExpiry()
+        });
+        await setDoc(doc(db, 'quizRooms', code, 'players', visitorId), {
+          name: hostName, isHost: true, joinedAt: serverTimestamp(),
+          soalIndex: 0, correctCount: 0, finished: false,
+          finishedAt: null, timeTakenMs: null, finalScore: null,
+          lastUpdate: serverTimestamp()
+        });
+        return code;
+      } catch (e) {
+        console.warn('[Duel] Gagal buat room:', e);
+        return null;
+      }
+    }
+
+    async function joinDuelRoom(code, playerName) {
+      if (!db) return { ok: false, reason: 'Analytics belum siap.' };
+      try {
+        const snap = await getDoc(doc(db, 'quizRooms', code));
+        if (!snap.exists()) return { ok: false, reason: 'Kode room tidak ditemukan.' };
+        const room = snap.data();
+        if (room.status === 'closed') return { ok: false, reason: 'Room ini sudah ditutup.' };
+        if (room.status === 'playing') return { ok: false, reason: 'Duel sudah dimulai, tidak bisa gabung lagi.' };
+        await setDoc(doc(db, 'quizRooms', code, 'players', visitorId), {
+          name: playerName, isHost: (room.hostVisitorId === visitorId), joinedAt: serverTimestamp(),
+          soalIndex: 0, correctCount: 0, finished: false,
+          finishedAt: null, timeTakenMs: null, finalScore: null,
+          lastUpdate: serverTimestamp()
+        }, { merge: true });
+        return { ok: true, room };
+      } catch (e) {
+        console.warn('[Duel] Gagal gabung room:', e);
+        return { ok: false, reason: 'Terjadi kesalahan, coba lagi.' };
+      }
+    }
+
+    function listenDuelRoom(code, cb) {
+      if (!db) return () => { };
+      return onSnapshot(doc(db, 'quizRooms', code), (snap) => cb(snap.exists() ? snap.data() : null));
+    }
+
+    function listenDuelPlayers(code, cb) {
+      if (!db) return () => { };
+      return onSnapshot(collection(db, 'quizRooms', code, 'players'), (snap) => {
+        cb(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      });
+    }
+
+    async function startDuelRoom(code) {
+      try {
+        await updateDoc(doc(db, 'quizRooms', code), { status: 'playing', startedAt: serverTimestamp() });
+      } catch (e) { console.warn('[Duel] Gagal mulai room:', e); }
+    }
+
+    async function updateDuelProgress(code, patch) {
+      try {
+        if (!db) return;
+        await setDoc(doc(db, 'quizRooms', code, 'players', visitorId), {
+          ...patch, lastUpdate: serverTimestamp()
+        }, { merge: true });
+      } catch (e) { console.warn('[Duel] Gagal update progres:', e); }
+    }
+
+    async function finishDuelPlayer(code, { correctCount, timeTakenMs }) {
+      try {
+        if (!db) return;
+        const finalScore = correctCount * 1000 - Math.round(timeTakenMs / 1000);
+        await setDoc(doc(db, 'quizRooms', code, 'players', visitorId), {
+          finished: true, finishedAt: serverTimestamp(), correctCount, timeTakenMs, finalScore,
+          lastUpdate: serverTimestamp()
+        }, { merge: true });
+      } catch (e) { console.warn('[Duel] Gagal simpan hasil akhir:', e); }
+    }
+
+    async function closeDuelRoom(code) {
+      try {
+        if (db && code) await deleteDoc(doc(db, 'quizRooms', code));
+      } catch (e) { console.warn('[Duel] Gagal tutup room:', e); }
+    }
+
+    async function cleanupExpiredDuelRooms() {
+      try {
+        if (!db) return;
+        const q = query(collection(db, 'quizRooms'), where('expiresAt', '<=', Timestamp.now()), limit(10));
+        const snap = await getDocs(q);
+        await Promise.all(snap.docs.map((d) => deleteDoc(d.ref).catch(() => { })));
+      } catch (e) { /* diamkan */ }
+    }
+
     window.__analytics = {
       updateVisitorName, updateSessionLevel, logResult,
       loginGoogle, logoutAdmin,
       getAdminStatus: () => isAdminFlag,
       startLiveSession, updateLiveSession, endLiveSession,
       getLiveCode: () => liveSessionCode,
-      submitFeedback
+      submitFeedback,
+      createDuelRoom, joinDuelRoom, listenDuelRoom, listenDuelPlayers,
+      startDuelRoom, updateDuelProgress, finishDuelPlayer, closeDuelRoom,
+      getVisitorId: () => visitorId
     };
     initVisitor();
   </script>
