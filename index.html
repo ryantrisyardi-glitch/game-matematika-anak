@@ -1879,6 +1879,18 @@
     </div>
   </div>
 
+  <!-- KONFIRMASI KELUAR RONDE DUEL -->
+  <div class="live-modal-overlay" id="duel-leave-confirm-overlay">
+    <div class="live-modal-card">
+      <h3>⚠️ Keluar dari Ronde Ini?</h3>
+      <p class="live-sub">Kamu akan kembali ke lobi room. Room tetap terbuka, teman-temanmu bisa lanjut main.</p>
+      <div class="admin-modal-actions">
+        <button class="btn-admin-action btn-admin-logout" onclick="konfirmasiKeluarRondeDuel()">Ya, Kembali ke Lobi</button>
+        <button class="btn-admin-action btn-admin-close" onclick="batalKeluarRondeDuel()">Batal, Lanjut Main</button>
+      </div>
+    </div>
+  </div>
+
   <!-- KRITIK & SARAN CORNER BUTTON & MODAL -->
   <button class="feedback-corner-btn" onclick="openFeedbackModal()" title="Kritik & Saran">💬</button>
   <div class="live-modal-overlay" id="feedback-modal-overlay">
@@ -2655,8 +2667,28 @@
     }
     function kembaliDariGame() {
       clearKodeTimer();
-      if (duelActive) { tinggalkanRoomDuel(); return; }
+      if (duelActive) {
+        document.getElementById('duel-leave-confirm-overlay').classList.add('show');
+        return;
+      }
       showScreen('screen-method'); renderMethodScreen(currentLevel);
+    }
+    function batalKeluarRondeDuel() {
+      document.getElementById('duel-leave-confirm-overlay').classList.remove('show');
+    }
+    function konfirmasiKeluarRondeDuel() {
+      document.getElementById('duel-leave-confirm-overlay').classList.remove('show');
+      kembaliKeLobiDuel();
+    }
+    // Berhenti main ronde ini TANPA meninggalkan room — teman-teman tetap bisa
+    // lanjut, dan kita bisa lihat lobi / gabung lagi di ronde berikutnya.
+    function kembaliKeLobiDuel() {
+      clearKodeTimer();
+      duelActive = false;
+      const miniBoard = document.getElementById('duel-mini-leaderboard');
+      if (miniBoard) miniBoard.style.display = 'none';
+      trackEvent('duel_keluar_ronde', { level: currentLevel });
+      masukLobbyDuel();
     }
     function mainLagi() {
       trackEvent('main_lagi', { level: currentLevel, method: currentMethod });
@@ -3063,8 +3095,11 @@
       }
 
       const isMemorizing = currentKodeMode === 'memorizing';
+      const hideManualToggle = duelActive && isMemorizing; // Mode Duel + Memorizing: murni timer, adil untuk semua pemain
       const introText = isMemorizing
-        ? 'Hafalkan kodenya dulu! Soal muncul otomatis saat waktu habis ⏳'
+        ? (hideManualToggle
+          ? 'Hafalkan kodenya dulu! Soal muncul otomatis saat waktu habis ⏳ (mode duel: tidak bisa disembunyikan manual)'
+          : 'Hafalkan kodenya dulu! Soal muncul otomatis saat waktu habis ⏳')
         : 'Hafalkan kodenya, lalu tekan tombol di bawah untuk memulai soal 👇';
 
       document.getElementById('game-box').innerHTML = `
@@ -3072,7 +3107,7 @@
       ${introText}
     </p>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="btn-kode-toggle" id="kode-toggle-btn" onclick="toggleKodeVisibility()">🙈 Sembunyikan &amp; Mulai Soal</button>
+      ${hideManualToggle ? '' : `<button class="btn-kode-toggle" id="kode-toggle-btn" onclick="toggleKodeVisibility()">🙈 Sembunyikan &amp; Mulai Soal</button>`}
       <span class="kode-timer-badge" id="kode-timer-badge" style="display:none"></span>
     </div>
     <div class="kode-legend" id="kode-legend-wrap">${legendHtml}</div>
@@ -3382,6 +3417,14 @@
     function renderDuelPickUI() {
       document.querySelectorAll('#duel-pick-level .duel-pick-btn').forEach((b) =>
         b.classList.toggle('selected', Number(b.dataset.lv) === duelSelLevel));
+
+      // Metode Gambar cuma ada di Level Pemula (sama seperti mode solo) —
+      // sembunyikan tombolnya di level lain, dan pindah otomatis ke Angka
+      // kalau sebelumnya Gambar terpilih lalu levelnya diganti.
+      const gambarBtn = document.querySelector('#duel-pick-method [data-method="1"]');
+      if (gambarBtn) gambarBtn.style.display = (duelSelLevel === 1) ? 'inline-flex' : 'none';
+      if (duelSelMethod === 1 && duelSelLevel !== 1) duelSelMethod = 2;
+
       document.querySelectorAll('#duel-pick-method .duel-pick-btn').forEach((b) =>
         b.classList.toggle('selected', Number(b.dataset.method) === duelSelMethod));
       document.querySelectorAll('#duel-pick-kodetier .duel-pick-btn').forEach((b) =>
@@ -3556,29 +3599,34 @@
       const panel = document.getElementById('duel-result-panel');
       if (!panel) return;
 
+      const myId = window.__analytics?.getVisitorId?.();
+      const totalPlayers = duelPlayersData.length;
+      const finishedCount = duelPlayersData.filter((p) => p.finished).length;
+
+      // Peringkat di banner SELALU berdasarkan Nilai Akhir (gabungan), tidak ikut
+      // berubah walau pemain sedang melihat tab Tercepat/Jawab Benar.
+      const sortedFinal = [...duelPlayersData].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+      const myFinalIndex = sortedFinal.findIndex((p) => p.id === myId);
+      const myFinalRank = myFinalIndex >= 0 ? myFinalIndex + 1 : null;
+
+      let rankBadgeHtml = '';
+      if (myFinalRank) {
+        const isTop = myFinalRank === 1;
+        rankBadgeHtml = `
+          <div class="duel-my-rank-badge ${isTop ? 'rank-gold' : 'rank-other'}">
+            <div class="dmr-big">${isTop ? '🥇 JUARA 1!' : `#${myFinalRank} dari ${totalPlayers} pemain`}</div>
+            <div class="dmr-sub">${isTop ? 'Kamu di puncak leaderboard!' : 'Terus semangat, kejar posisi 1! 💪'}</div>
+          </div>`;
+      }
+
+      // Daftar yang ditampilkan menyesuaikan tab yang sedang dipilih
       let sorted = [...duelPlayersData];
       if (mode === 'speed') {
         sorted = sorted.filter((p) => p.finished).sort((a, b) => (a.timeTakenMs || Infinity) - (b.timeTakenMs || Infinity));
       } else if (mode === 'correct') {
         sorted = sorted.sort((a, b) => (b.correctCount || 0) - (a.correctCount || 0));
       } else {
-        sorted = sorted.sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
-      }
-
-      const myId = window.__analytics?.getVisitorId?.();
-      const myIndex = sorted.findIndex((p) => p.id === myId);
-      const myRank = myIndex >= 0 ? myIndex + 1 : null;
-      const totalPlayers = duelPlayersData.length;
-      const finishedCount = duelPlayersData.filter((p) => p.finished).length;
-
-      let rankBadgeHtml = '';
-      if (myRank) {
-        const isTop = myRank === 1;
-        rankBadgeHtml = `
-          <div class="duel-my-rank-badge ${isTop ? 'rank-gold' : 'rank-other'}">
-            <div class="dmr-big">${isTop ? '🥇 JUARA 1!' : `#${myRank} dari ${totalPlayers} pemain`}</div>
-            <div class="dmr-sub">${isTop ? 'Kamu di puncak leaderboard!' : 'Terus semangat, kejar posisi 1! 💪'}</div>
-          </div>`;
+        sorted = sortedFinal;
       }
 
       const medals = ['🥇', '🥈', '🥉'];
@@ -3609,9 +3657,9 @@
       panel.innerHTML = `
         ${rankBadgeHtml}
         <div class="duel-rank-tabs">
-          <button class="duel-rank-tab ${mode === 'final' ? 'active' : ''}" onclick="renderDuelResultPanel('final')">🏆 Gabungan</button>
+          <button class="duel-rank-tab ${mode === 'final' ? 'active' : ''}" onclick="renderDuelResultPanel('final')">🏆 Nilai Akhir</button>
           <button class="duel-rank-tab ${mode === 'speed' ? 'active' : ''}" onclick="renderDuelResultPanel('speed')">⚡ Tercepat</button>
-          <button class="duel-rank-tab ${mode === 'correct' ? 'active' : ''}" onclick="renderDuelResultPanel('correct')">✅ Nilai</button>
+          <button class="duel-rank-tab ${mode === 'correct' ? 'active' : ''}" onclick="renderDuelResultPanel('correct')">✅ Jawab Benar</button>
         </div>
         <div class="duel-mini-leaderboard" style="display:block;margin-top:0">
           <div class="dml-title">${finishedCount}/${totalPlayers} pemain sudah selesai</div>
@@ -3672,6 +3720,11 @@
       document.getElementById('result-score').textContent = displayScore;
       document.getElementById('result-total').textContent = '10';
       document.getElementById('result-msg').textContent = msg;
+
+      // Mode Duel: sembunyikan emoji besar & bintang, cukup nama + skor + leaderboard
+      document.getElementById('result-emoji').style.display = duelActive ? 'none' : '';
+      starsWrap.style.display = duelActive ? 'none' : 'flex';
+      document.getElementById('result-msg').style.display = duelActive ? 'none' : '';
 
       // Review soal yang salah
       const rev = document.getElementById('review-section');
@@ -4011,6 +4064,190 @@
       });
     }
 
+    // Versi khusus Mode Duel: banner + peringkat + leaderboard, mereplikasi
+    // persis apa yang tampil di layar hasil duel (tanpa emoji besar/bintang).
+    function buatGambarShareDuel() {
+      return new Promise((resolve, reject) => {
+        try {
+          const level = namaLevel(currentLevel);
+          const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? 'Mode Kriptaritma' : 'Metode Angka'));
+
+          const myId = window.__analytics?.getVisitorId?.();
+          const sortedFinal = [...duelPlayersData].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+          const myIndex = sortedFinal.findIndex((p) => p.id === myId);
+          const myRank = myIndex >= 0 ? myIndex + 1 : null;
+          const totalPlayers = duelPlayersData.length;
+          const isTop = myRank === 1;
+
+          const W = 640, H = 960;
+          const cv = document.getElementById('share-canvas');
+          cv.width = W; cv.height = H;
+          const ctx = cv.getContext('2d');
+
+          // ── BACKGROUND (sama seperti versi solo) ──
+          const bg = ctx.createLinearGradient(0, 0, W, H);
+          bg.addColorStop(0, '#060618'); bg.addColorStop(0.45, '#12093a'); bg.addColorStop(1, '#0a0a22');
+          ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+          const orbs = [
+            { x: 560, y: 80, r: 200, rr: 77, gg: 100, bb: 255, a: 0.22 },
+            { x: 80, y: 800, r: 200, rr: 200, gg: 60, bb: 230, a: 0.20 },
+            { x: 500, y: 700, r: 160, rr: 255, gg: 120, bb: 40, a: 0.15 },
+            { x: 80, y: 220, r: 140, rr: 60, gg: 200, bb: 120, a: 0.14 },
+            { x: 320, y: 480, r: 220, rr: 77, gg: 150, bb: 255, a: 0.10 },
+          ];
+          orbs.forEach(o => {
+            const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
+            g.addColorStop(0, `rgba(${o.rr},${o.gg},${o.bb},${o.a})`);
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+            ctx.fillStyle = g; ctx.fill();
+          });
+
+          const starPts = [
+            [30, 40, 1.2], [100, 15, 0.8], [200, 55, 1.0], [340, 20, 0.7], [480, 45, 1.1],
+            [580, 25, 0.9], [610, 110, 0.7], [580, 200, 1.3], [620, 340, 0.8], [600, 480, 1.0],
+            [560, 600, 0.7], [580, 720, 1.1], [560, 840, 0.8], [480, 920, 1.0], [350, 940, 0.7],
+            [180, 930, 0.9], [50, 880, 1.1], [20, 740, 0.8], [15, 580, 1.0], [25, 420, 0.7],
+          ];
+          starPts.forEach(([sx, sy, sr]) => {
+            ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.5})`; ctx.fill();
+          });
+
+          // ── TOP BANNER ──
+          const topGrad = ctx.createLinearGradient(0, 0, W, 120);
+          topGrad.addColorStop(0, '#4D96FF'); topGrad.addColorStop(1, '#CC5DE8');
+          ctx.fillStyle = topGrad;
+          ctx.beginPath();
+          ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W, 100);
+          ctx.quadraticCurveTo(W / 2, 140, 0, 100); ctx.closePath(); ctx.fill();
+
+          ctx.textAlign = 'center';
+          ctx.font = 'bold 24px Arial,sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText('🎮  GAME MATEMATIKA ANAK', W / 2, 42);
+          ctx.font = 'bold 15px Arial,sans-serif';
+          ctx.fillStyle = '#FFD93D';
+          ctx.fillText('⚔️ Mode Duel — Main Bareng!', W / 2, 70);
+
+          // ── BADGE PERINGKAT (besar, di tengah) ──
+          const rbX = 90, rbY = 150, rbW = W - 180, rbH = 130, rbR = 24;
+          ctx.beginPath();
+          ctx.moveTo(rbX + rbR, rbY); ctx.lineTo(rbX + rbW - rbR, rbY);
+          ctx.quadraticCurveTo(rbX + rbW, rbY, rbX + rbW, rbY + rbR);
+          ctx.lineTo(rbX + rbW, rbY + rbH - rbR);
+          ctx.quadraticCurveTo(rbX + rbW, rbY + rbH, rbX + rbW - rbR, rbY + rbH);
+          ctx.lineTo(rbX + rbR, rbY + rbH);
+          ctx.quadraticCurveTo(rbX, rbY + rbH, rbX, rbY + rbH - rbR);
+          ctx.lineTo(rbX, rbY + rbR);
+          ctx.quadraticCurveTo(rbX, rbY, rbX + rbR, rbY);
+          ctx.closePath();
+          if (isTop) {
+            const gg = ctx.createLinearGradient(rbX, rbY, rbX + rbW, rbY + rbH);
+            gg.addColorStop(0, '#FFD93D'); gg.addColorStop(1, '#FF922B');
+            ctx.fillStyle = gg;
+          } else {
+            ctx.fillStyle = 'rgba(77,150,255,0.18)';
+            ctx.strokeStyle = 'rgba(77,150,255,0.5)'; ctx.lineWidth = 2;
+          }
+          ctx.fill();
+          if (!isTop) ctx.stroke();
+
+          ctx.font = 'bold 34px Arial,sans-serif';
+          ctx.fillStyle = isTop ? '#1a1a2e' : '#4D96FF';
+          ctx.fillText(isTop ? '🥇 JUARA 1!' : (myRank ? `#${myRank} dari ${totalPlayers} pemain` : 'Sudah Main Duel!'), W / 2, rbY + 58);
+          ctx.font = 'bold 16px Arial,sans-serif';
+          ctx.fillStyle = isTop ? 'rgba(26,26,46,0.75)' : 'rgba(77,150,255,0.75)';
+          ctx.fillText(isTop ? 'Di puncak leaderboard!' : 'Terus semangat, kejar posisi 1!', W / 2, rbY + 90);
+
+          // ── BADGE LEVEL/METODE ──
+          ctx.font = 'bold 14px Arial,sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.fillText(`${level}  ·  ${method}`, W / 2, rbY + rbH + 30);
+
+          // ── LEADERBOARD ──
+          ctx.font = 'bold 13px Arial,sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+          ctx.fillText('L E A D E R B O A R D   R O N D E   I N I', W / 2, rbY + rbH + 66);
+
+          const medals = ['🥇', '🥈', '🥉'];
+          const rowH = 56, rowW = W - 120, rowX = 60;
+          let rowY = rbY + rbH + 90;
+          const rowsToShow = sortedFinal.slice(0, 6);
+          rowsToShow.forEach((p, i) => {
+            const isMe = p.id === myId;
+            ctx.beginPath();
+            const rr = 14;
+            ctx.moveTo(rowX + rr, rowY); ctx.lineTo(rowX + rowW - rr, rowY);
+            ctx.quadraticCurveTo(rowX + rowW, rowY, rowX + rowW, rowY + rr);
+            ctx.lineTo(rowX + rowW, rowY + rowH - rr);
+            ctx.quadraticCurveTo(rowX + rowW, rowY + rowH, rowX + rowW - rr, rowY + rowH);
+            ctx.lineTo(rowX + rr, rowY + rowH);
+            ctx.quadraticCurveTo(rowX, rowY + rowH, rowX, rowY + rowH - rr);
+            ctx.lineTo(rowX, rowY + rr);
+            ctx.quadraticCurveTo(rowX, rowY, rowX + rr, rowY);
+            ctx.closePath();
+            ctx.fillStyle = isMe ? 'rgba(255,217,61,0.14)' : 'rgba(255,255,255,0.05)';
+            ctx.fill();
+            if (isMe) { ctx.strokeStyle = 'rgba(255,217,61,0.4)'; ctx.lineWidth = 1.5; ctx.stroke(); }
+
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 22px Arial,sans-serif';
+            ctx.fillStyle = isMe ? '#FFD93D' : 'rgba(255,255,255,0.85)';
+            const medal = medals[i] || `${i + 1}.`;
+            ctx.fillText(`${medal}  ${p.name}${isMe ? ' (kamu)' : ''}`, rowX + 18, rowY + 36);
+
+            ctx.textAlign = 'right';
+            ctx.font = 'bold 22px Arial,sans-serif';
+            ctx.fillStyle = isMe ? '#FFD93D' : '#6BCB77';
+            ctx.fillText(p.finished ? `${p.finalScore ?? '-'}` : '⏳', rowX + rowW - 18, rowY + 36);
+
+            rowY += rowH + 10;
+          });
+          ctx.textAlign = 'center';
+
+          // ── CTA ──
+          const ctaY2 = rowY + 10;
+          const ctaGrad = ctx.createLinearGradient(60, ctaY2, W - 60, ctaY2 + 70);
+          ctaGrad.addColorStop(0, 'rgba(255,150,40,0.30)'); ctaGrad.addColorStop(1, 'rgba(255,80,120,0.25)');
+          ctx.beginPath();
+          const ctaX = 60, ctaW = W - 120, ctaH = 70, ctaR = 16;
+          ctx.moveTo(ctaX + ctaR, ctaY2); ctx.lineTo(ctaX + ctaW - ctaR, ctaY2);
+          ctx.quadraticCurveTo(ctaX + ctaW, ctaY2, ctaX + ctaW, ctaY2 + ctaR);
+          ctx.lineTo(ctaX + ctaW, ctaY2 + ctaH - ctaR);
+          ctx.quadraticCurveTo(ctaX + ctaW, ctaY2 + ctaH, ctaX + ctaW - ctaR, ctaY2 + ctaH);
+          ctx.lineTo(ctaX + ctaR, ctaY2 + ctaH);
+          ctx.quadraticCurveTo(ctaX, ctaY2 + ctaH, ctaX, ctaY2 + ctaH - ctaR);
+          ctx.lineTo(ctaX, ctaY2 + ctaR);
+          ctx.quadraticCurveTo(ctaX, ctaY2, ctaX + ctaR, ctaY2);
+          ctx.closePath();
+          ctx.fillStyle = ctaGrad; ctx.fill();
+          ctx.strokeStyle = 'rgba(255,150,60,0.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+          ctx.font = 'bold 18px Arial,sans-serif';
+          ctx.fillStyle = '#FFD93D';
+          ctx.fillText('⚔️ Ayo mabar, siapa bisa jadi juara 1?', W / 2, ctaY2 + 30);
+          ctx.font = '13px Arial,sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.fillText('Gratis! Langsung main bareng tanpa install', W / 2, ctaY2 + 54);
+
+          // ── FOOTER ──
+          const footY = Math.min(ctaY2 + 100, H - 60);
+          ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(60, footY); ctx.lineTo(W - 60, footY); ctx.stroke();
+          ctx.font = '14px Arial,sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.45)';
+          ctx.fillText('Main di sini: ' + GAME_URL.replace('https://', ''), W / 2, footY + 30);
+          ctx.font = '12px Arial,sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.20)';
+          ctx.fillText('Game Matematika Anak  ·  Gratis & Fun!', W / 2, footY + 58);
+
+          resolve(cv);
+        } catch (err) { reject(err); }
+      });
+    }
+
     async function bukaShare() {
       trackEvent('bagikan_hasil', { level: currentLevel, method: currentMethod });
       const btn = document.querySelector('.btn-share');
@@ -4018,7 +4255,7 @@
       if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Menyiapkan...'; }
 
       try {
-        const cv = await buatGambarShare();
+        const cv = duelActive ? await buatGambarShareDuel() : await buatGambarShare();
         const shareText = buatShareText();
         const TITLE = '🎮 Game Matematika Anak';
 
@@ -4095,7 +4332,15 @@
       const trackedUrl = `${GAME_URL}?src=whatsapp`;
       const score = parseInt(document.getElementById('result-score').textContent) || 0;
       const level = namaLevel(currentLevel);
-      const text = `🎮 Game Matematika Anak\n👤 ${playerName} baru saja bermain!\n📚 ${level} · Skor ${score}/10\n\nAyo main juga, seru banget! 👇\n${trackedUrl}`;
+      let text;
+      if (duelActive) {
+        const myId = window.__analytics?.getVisitorId?.();
+        const sortedFinal = [...duelPlayersData].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+        const myRank = sortedFinal.findIndex((p) => p.id === myId) + 1;
+        text = `🎮 Game Matematika Anak — Mode Duel ⚔️\n👤 ${playerName} baru saja mabar!\n📚 ${level}\n🏆 Peringkat #${myRank} dari ${duelPlayersData.length} pemain\n\nAyo ikutan mabar, seru banget! 👇\n${trackedUrl}`;
+      } else {
+        text = `🎮 Game Matematika Anak\n👤 ${playerName} baru saja bermain!\n📚 ${level} · Skor ${score}/10\n\nAyo main juga, seru banget! 👇\n${trackedUrl}`;
+      }
       const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
       window.open(waUrl, '_blank');
     }
@@ -4112,7 +4357,7 @@
       } catch (e) { /* abaikan jika clipboard tak tersedia */ }
 
       try {
-        const cv = await buatGambarShare();
+        const cv = duelActive ? await buatGambarShareDuel() : await buatGambarShare();
         const blob = await new Promise((res, rej) => {
           cv.toBlob(b => b ? res(b) : rej(new Error('toBlob null')), 'image/png', 0.92);
         });
