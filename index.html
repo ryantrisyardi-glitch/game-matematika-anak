@@ -2048,7 +2048,7 @@
       <div class="tier-card" onclick="bukaLayarBuatRoom()">
         <div class="tsample">🏠</div>
         <div class="tname">Buat Room</div>
-        <div class="tdesc">Jadi host, pilih level & soal,<br>ajak teman pakai kode.</div>
+        <div class="tdesc">Langsung dapat kode room,<br>atur level & soal di lobi.</div>
       </div>
       <div class="tier-card" onclick="showScreen('screen-duel-join')">
         <div class="tsample">🔑</div>
@@ -2058,55 +2058,6 @@
     </div>
     <div class="back-row">
       <button class="btn-ghost" onclick="showScreen('screen-level')">← Kembali</button>
-    </div>
-  </div>
-
-  <!-- DUEL: BUAT ROOM / MULAI RONDE BARU (level + metode dalam satu layar) -->
-  <div id="screen-duel-create" class="screen">
-    <h2 id="duel-create-title">🏠 Buat Room Duel</h2>
-    <p class="sub">Semua pemain akan dapat soal yang sama persis!</p>
-
-    <p class="duel-pick-label">1️⃣ Pilih Level</p>
-    <div class="duel-pick-row" id="duel-pick-level">
-      <button class="duel-pick-btn" data-lv="1" onclick="pilihDuelLevel(1)">🌱 Pemula</button>
-      <button class="duel-pick-btn" data-lv="2" onclick="pilihDuelLevel(2)">🌿 Menengah</button>
-      <button class="duel-pick-btn" data-lv="3" onclick="pilihDuelLevel(3)">🌳 Men. Atas</button>
-      <button class="duel-pick-btn" data-lv="4" onclick="pilihDuelLevel(4)">🏆 Atas</button>
-    </div>
-
-    <p class="duel-pick-label">2️⃣ Pilih Metode</p>
-    <div class="duel-pick-row" id="duel-pick-method">
-      <button class="duel-pick-btn" data-method="1" onclick="pilihDuelMethod(1)">🖼️ Gambar</button>
-      <button class="duel-pick-btn" data-method="2" onclick="pilihDuelMethod(2)">🔢 Angka</button>
-      <button class="duel-pick-btn" data-method="3" onclick="pilihDuelMethod(3)">🧠 Kode</button>
-      <button class="duel-pick-btn" data-method="4" onclick="pilihDuelMethod(4)">🧩 Kriptaritma</button>
-    </div>
-
-    <div id="duel-pick-kode-extra" style="display:none;width:100%">
-      <p class="duel-pick-label">Tingkat Kode</p>
-      <div class="duel-pick-row" id="duel-pick-kodetier">
-        <button class="duel-pick-btn" data-kt="2" onclick="pilihDuelKodeTier(2)">2 Tingkat</button>
-        <button class="duel-pick-btn" data-kt="3" onclick="pilihDuelKodeTier(3)">3 Tingkat</button>
-      </div>
-      <p class="duel-pick-label">Cara Kode Ditampilkan</p>
-      <div class="duel-pick-row" id="duel-pick-kodemode">
-        <button class="duel-pick-btn" data-km="normal" onclick="pilihDuelKodeMode('normal')">👀 Normal</button>
-        <button class="duel-pick-btn" data-km="memorizing" onclick="pilihDuelKodeMode('memorizing')">⏳ Memorizing</button>
-      </div>
-    </div>
-
-    <div id="duel-pick-kripto-extra" style="display:none;width:100%">
-      <p class="duel-pick-label">Tingkat Kriptaritma</p>
-      <div class="duel-pick-row" id="duel-pick-kriptotier">
-        <button class="duel-pick-btn" data-krt="normal" onclick="pilihDuelKriptoTier('normal')">Normal</button>
-        <button class="duel-pick-btn" data-krt="advance" onclick="pilihDuelKriptoTier('advance')">🏆 Advance</button>
-      </div>
-    </div>
-
-    <button class="btn-main btn-yellow" style="margin-top:8px" onclick="finalisasiDuelCreate()" id="duel-create-btn">🚀 Buat Room</button>
-    <div id="duel-create-msg" style="font-size:0.85rem;min-height:18px;margin-top:8px"></div>
-    <div class="back-row">
-      <button class="btn-ghost" id="duel-create-back-btn" onclick="showScreen('screen-duel-menu')">← Kembali</button>
     </div>
   </div>
 
@@ -2122,12 +2073,73 @@
     </div>
   </div>
 
-  <!-- DUEL: LOBBY (menunggu pemain lain / antar-ronde) -->
+  <!-- DUEL: LOBBY — kode room, bagikan link, atur level/metode/peran (host), daftar pemain -->
   <div id="screen-duel-lobby" class="screen">
     <h2>⏳ Lobi Duel</h2>
     <p class="sub" id="duel-lobby-sub">Menunggu pemain lain bergabung...</p>
     <div class="duel-code-big" id="duel-lobby-code">-----</div>
+
+    <button class="btn-ghost" onclick="toggleDuelSharePanel()" style="margin-bottom:10px">🔗 Bagikan Room</button>
+    <div id="duel-share-panel" style="display:none;text-align:center;margin-bottom:14px">
+      <img id="duel-share-qr" alt="QR Room Duel" class="live-qr-img" width="160" height="160" onerror="this.style.display='none'">
+      <p id="duel-share-link-text" style="font-size:0.72rem;color:rgba(255,255,255,0.5);word-break:break-all;margin:8px 0"></p>
+      <div class="admin-modal-actions">
+        <button class="btn-admin-action btn-admin-dash" onclick="copyDuelLink()">🔗 Salin Link</button>
+        <button class="btn-share-sm btn-whatsapp" onclick="bagikanRoomWhatsApp()" style="width:100%;justify-content:center;margin-top:6px">💬 Bagikan ke WhatsApp</button>
+      </div>
+    </div>
+
     <div class="duel-player-list" id="duel-lobby-players"></div>
+
+    <!-- Config level/metode/peran — hanya host yang lihat, diisi di LOBI (bukan sebelum room dibuat) -->
+    <div id="duel-lobby-config" style="display:none;width:100%">
+      <p class="duel-pick-label">1️⃣ Pilih Level</p>
+      <div class="duel-pick-row" id="duel-pick-level">
+        <button class="duel-pick-btn" data-lv="1" onclick="pilihDuelLevel(1)">🌱 Pemula</button>
+        <button class="duel-pick-btn" data-lv="2" onclick="pilihDuelLevel(2)">🌿 Menengah</button>
+        <button class="duel-pick-btn" data-lv="3" onclick="pilihDuelLevel(3)">🌳 Men. Atas</button>
+        <button class="duel-pick-btn" data-lv="4" onclick="pilihDuelLevel(4)">🏆 Atas</button>
+      </div>
+
+      <p class="duel-pick-label">2️⃣ Pilih Metode</p>
+      <div class="duel-pick-row" id="duel-pick-method">
+        <button class="duel-pick-btn" data-method="1" onclick="pilihDuelMethod(1)">🖼️ Gambar</button>
+        <button class="duel-pick-btn" data-method="2" onclick="pilihDuelMethod(2)">🔢 Angka</button>
+        <button class="duel-pick-btn" data-method="3" onclick="pilihDuelMethod(3)">🧠 Kode</button>
+        <button class="duel-pick-btn" data-method="4" onclick="pilihDuelMethod(4)">🧩 Kriptaritma</button>
+      </div>
+
+      <div id="duel-pick-kode-extra" style="display:none;width:100%">
+        <p class="duel-pick-label">Tingkat Kode</p>
+        <div class="duel-pick-row" id="duel-pick-kodetier">
+          <button class="duel-pick-btn" data-kt="2" onclick="pilihDuelKodeTier(2)">2 Tingkat</button>
+          <button class="duel-pick-btn" data-kt="3" onclick="pilihDuelKodeTier(3)">3 Tingkat</button>
+        </div>
+        <p class="duel-pick-label">Cara Kode Ditampilkan</p>
+        <div class="duel-pick-row" id="duel-pick-kodemode">
+          <button class="duel-pick-btn" data-km="normal" onclick="pilihDuelKodeMode('normal')">👀 Normal</button>
+          <button class="duel-pick-btn" data-km="memorizing" onclick="pilihDuelKodeMode('memorizing')">⏳ Memorizing</button>
+        </div>
+      </div>
+
+      <div id="duel-pick-kripto-extra" style="display:none;width:100%">
+        <p class="duel-pick-label">Tingkat Kriptaritma</p>
+        <div class="duel-pick-row" id="duel-pick-kriptotier">
+          <button class="duel-pick-btn" data-krt="normal" onclick="pilihDuelKriptoTier('normal')">Normal</button>
+          <button class="duel-pick-btn" data-krt="advance" onclick="pilihDuelKriptoTier('advance')">🏆 Advance</button>
+        </div>
+      </div>
+
+      <p class="duel-pick-label">3️⃣ Peran Kamu Sebagai Host</p>
+      <div class="duel-pick-row" id="duel-pick-role">
+        <button class="duel-pick-btn" data-role="player" onclick="pilihDuelHostRole('player')">🎮 Ikut Main</button>
+        <button class="duel-pick-btn" data-role="moderator" onclick="pilihDuelHostRole('moderator')">🧑‍⚖️ Jadi Juri (Amati Saja)</button>
+      </div>
+    </div>
+
+    <!-- Tampilan progres live untuk host yang jadi juri saat ronde berjalan -->
+    <div id="duel-lobby-live-watch" style="display:none;width:100%"></div>
+
     <div id="duel-lobby-actions"></div>
     <div class="back-row">
       <button class="btn-ghost" onclick="tinggalkanRoomDuel()">← Tinggalkan Room</button>
@@ -2212,6 +2224,16 @@
       ending: [BASE + 'Ending.mp3'],
     };
     let bgMusic = null, playerName = '';
+    let pendingDuelJoinCode = null; // kode dari link ?duel=XXXXX, diproses setelah nama diisi
+
+    // Deteksi link undangan room duel (?duel=KODE) — diproses setelah nama diisi
+    (function detectDuelInviteLink() {
+      try {
+        const params = new URLSearchParams(location.search);
+        const code = params.get('duel');
+        if (code) pendingDuelJoinCode = code.trim().toUpperCase();
+      } catch (e) { /* abaikan */ }
+    })();
 
     // ============================================================
     // ANALYTICS (Umami) - helper aman, tidak akan error kalau
@@ -2553,7 +2575,11 @@
         };
       }
       document.getElementById('greeting-text').textContent = `Halo, ${playerName}! Pilih levelmu 🎉`;
-      showScreen('screen-level');
+      if (pendingDuelJoinCode) {
+        prosesPendingDuelJoin();
+      } else {
+        showScreen('screen-level');
+      }
     }
     function pilihLevel(lv) {
       currentLevel = lv;
@@ -3358,14 +3384,15 @@
     // ============================================================
     // MODE DUEL (Multiplayer real-time) — reuse mesin game solo
     // ============================================================
-    let duelActive = false;                 // true selama sedang main ronde duel di screen-game
+    let duelActive = false;                 // true selama sedang main ronde duel di screen-game (sebagai pemain)
     let duelRoomCode = null, duelIsHost = false;
     let duelRoomData = null, duelPlayersData = [];
     let duelUnsubRoom = null, duelUnsubPlayers = null;
     let duelStartedAtMillis = null, duelLastPlayedRound = 0;
     let duelActiveRankTab = 'final';
-    let duelCreateMode = 'new'; // 'new' | 'newround'
     let duelSelLevel = 1, duelSelMethod = 2, duelSelKodeTier = 2, duelSelKodeMode = 'normal', duelSelKriptoTier = 'normal';
+    let duelHostPlays = true;               // host pilih ikut main (true) atau jadi juri/moderator (false)
+    let duelIsModeratorViewing = false;     // sedang lihat hasil sebagai juri (bukan pemain yang baru selesai)
 
     function openDuelMenu() {
       trackEvent('buka_menu_duel', {});
@@ -3377,29 +3404,35 @@
       if (duelUnsubPlayers) { duelUnsubPlayers(); duelUnsubPlayers = null; }
     }
 
-    // ---- LAYAR PILIH LEVEL + METODE (dipakai utk room baru & ganti level) ----
-    function bukaLayarBuatRoom() {
-      duelCreateMode = 'new';
+    // ---- BUAT ROOM: langsung dibuat, level & metode diatur nanti DI LOBI ----
+    async function bukaLayarBuatRoom() {
       duelSelLevel = 1; duelSelMethod = 2; duelSelKodeTier = 2; duelSelKodeMode = 'normal'; duelSelKriptoTier = 'normal';
-      document.getElementById('duel-create-title').textContent = '🏠 Buat Room Duel';
-      document.getElementById('duel-create-btn').textContent = '🚀 Buat Room';
-      document.getElementById('duel-create-back-btn').onclick = () => showScreen('screen-duel-menu');
-      document.getElementById('duel-create-msg').textContent = '';
-      renderDuelPickUI();
-      showScreen('screen-duel-create');
+      duelHostPlays = true;
+      showToast('Membuat room...', '');
+      const code = await window.__analytics?.createDuelRoom({
+        hostName: playerName, level: duelSelLevel, levelName: namaLevel(duelSelLevel),
+        method: duelSelMethod, methodName: hitungMethodLabelDuel(),
+        kodeTier: duelSelKodeTier, kodeMode: duelSelKodeMode, kriptoTier: duelSelKriptoTier
+      });
+      if (!code) { showToast('Gagal membuat room, coba lagi.', 'red'); return; }
+      duelRoomCode = code; duelIsHost = true; duelLastPlayedRound = 0;
+      trackEvent('duel_buat_room', {});
+      mulaiDengarkanRoomDuel();
+      masukLobbyDuel();
     }
 
+    // Dipanggil dari panel hasil ("🎚️ Ganti Level") — kembali ke lobi room YANG SAMA
+    // supaya host bisa atur ulang level/metode sebelum ronde berikutnya.
     function bukaLayarGantiLevelDuel() {
-      duelCreateMode = 'newround';
-      duelSelLevel = currentLevel || 1; duelSelMethod = currentMethod || 2;
-      duelSelKodeTier = currentKodeTier || 2; duelSelKodeMode = currentKodeMode || 'normal';
-      duelSelKriptoTier = currentKriptoTier || 'normal';
-      document.getElementById('duel-create-title').textContent = '🎚️ Pilih Level & Metode Baru';
-      document.getElementById('duel-create-btn').textContent = '🚀 Mulai Ronde Baru';
-      document.getElementById('duel-create-back-btn').onclick = () => showScreen('screen-result');
-      document.getElementById('duel-create-msg').textContent = '';
-      renderDuelPickUI();
-      showScreen('screen-duel-create');
+      const src = duelIsModeratorViewing
+        ? (duelRoomData || {})
+        : { level: currentLevel, method: currentMethod, kodeTier: currentKodeTier, kodeMode: currentKodeMode, kriptoTier: currentKriptoTier };
+      duelSelLevel = src.level || 1; duelSelMethod = src.method || 2;
+      duelSelKodeTier = src.kodeTier || 2; duelSelKodeMode = src.kodeMode || 'normal';
+      duelSelKriptoTier = src.kriptoTier || 'normal';
+      duelIsModeratorViewing = false;
+      pulihkanTampilanHasilNormal();
+      masukLobbyDuel();
     }
 
     function pilihDuelLevel(lv) { duelSelLevel = lv; renderDuelPickUI(); }
@@ -3412,6 +3445,10 @@
         return;
       }
       duelSelKriptoTier = t; renderDuelPickUI();
+    }
+    function pilihDuelHostRole(role) {
+      duelHostPlays = (role === 'player');
+      renderDuelPickUI();
     }
 
     function renderDuelPickUI() {
@@ -3445,6 +3482,9 @@
 
       document.getElementById('duel-pick-kode-extra').style.display = (duelSelMethod === 3) ? 'block' : 'none';
       document.getElementById('duel-pick-kripto-extra').style.display = (duelSelMethod === 4) ? 'block' : 'none';
+
+      document.querySelectorAll('#duel-pick-role .duel-pick-btn').forEach((b) =>
+        b.classList.toggle('selected', (b.dataset.role === 'player') === duelHostPlays));
     }
 
     function hitungMethodLabelDuel() {
@@ -3452,26 +3492,6 @@
       if (duelSelMethod === 3) return `Kode ${duelSelKodeTier}T · ${duelSelKodeMode === 'memorizing' ? 'Memorizing' : 'Normal'}`;
       if (duelSelMethod === 4) return duelSelKriptoTier === 'advance' ? 'Kriptaritma Advance' : 'Kriptaritma';
       return 'Angka';
-    }
-
-    async function finalisasiDuelCreate() {
-      const msgEl = document.getElementById('duel-create-msg');
-      if (duelCreateMode === 'new') {
-        msgEl.style.color = 'rgba(255,255,255,0.5)'; msgEl.textContent = 'Membuat room...';
-        const code = await window.__analytics?.createDuelRoom({
-          hostName: playerName, level: duelSelLevel, levelName: namaLevel(duelSelLevel),
-          method: duelSelMethod, methodName: hitungMethodLabelDuel(),
-          kodeTier: duelSelKodeTier, kodeMode: duelSelKodeMode, kriptoTier: duelSelKriptoTier
-        });
-        if (!code) { msgEl.style.color = '#FF6B6B'; msgEl.textContent = 'Gagal membuat room, coba lagi.'; return; }
-        duelRoomCode = code; duelIsHost = true; duelLastPlayedRound = 0;
-        trackEvent('duel_buat_room', { level: duelSelLevel, method: duelSelMethod });
-        mulaiDengarkanRoomDuel();
-        masukLobbyDuel();
-      } else {
-        msgEl.style.color = 'rgba(255,255,255,0.5)'; msgEl.textContent = 'Memulai ronde baru...';
-        await mulaiRondeBaruDuel();
-      }
     }
 
     // ---- GABUNG ROOM ----
@@ -3493,6 +3513,16 @@
       trackEvent('duel_gabung_room', {});
       mulaiDengarkanRoomDuel();
       masukLobbyDuel();
+    }
+
+    // Dipanggil begitu nama sudah diisi (submitNama) kalau tadinya buka lewat link ?duel=XXXXX
+    function prosesPendingDuelJoin() {
+      if (!pendingDuelJoinCode) return;
+      const code = pendingDuelJoinCode;
+      pendingDuelJoinCode = null;
+      showScreen('screen-duel-join');
+      document.getElementById('duel-join-code').value = code;
+      gabungRoomDuel();
     }
 
     // ---- LISTENER REALTIME (room + daftar pemain), tetap hidup selama di dalam room ----
@@ -3521,20 +3551,41 @@
       renderLobbyDuel();
     }
 
+    // Sedang ada ronde berjalan yang host-nya (kita) pilih jadi juri/moderator?
+    function sedangMengamatiRondeSbgJuri() {
+      return duelIsHost && duelRoomData && duelRoomData.status === 'playing' &&
+        duelRoomData.round === duelLastPlayedRound && duelRoomData.hostPlays === false;
+    }
+
     function renderLobbyDuel() {
       document.getElementById('duel-lobby-code').textContent = duelRoomCode || '-----';
       const list = document.getElementById('duel-lobby-players');
       if (list) {
         list.innerHTML = duelPlayersData.map((p) => `
           <div class="duel-player-row">
-            <span class="dp-name">${p.name}${p.isHost ? '<span class="dp-host-badge">HOST</span>' : ''}</span>
+            <span class="dp-name">${p.name}${p.isHost ? '<span class="dp-host-badge">HOST</span>' : ''}${p.isModerator ? '<span class="dp-host-badge" style="background:rgba(204,93,232,0.2);color:#CC5DE8">JURI</span>' : ''}</span>
             <span>👋 Siap</span>
           </div>`).join('');
       }
       document.getElementById('duel-lobby-sub').textContent = `${duelPlayersData.length} pemain sudah gabung`;
 
+      const configEl = document.getElementById('duel-lobby-config');
+      const watchEl = document.getElementById('duel-lobby-live-watch');
       const actionsEl = document.getElementById('duel-lobby-actions');
+
+      if (sedangMengamatiRondeSbgJuri()) {
+        // Host sedang jadi juri & ronde berjalan — tampilkan progres live, sembunyikan config
+        configEl.style.display = 'none';
+        watchEl.style.display = 'block';
+        actionsEl.innerHTML = '';
+        renderModeratorLiveView();
+        return;
+      }
+      watchEl.style.display = 'none';
+
       if (duelIsHost) {
+        configEl.style.display = 'block';
+        renderDuelPickUI();
         actionsEl.innerHTML = `
           <button class="btn-main btn-yellow" style="max-width:280px" onclick="mulaiRondeBaruDuel()">
             🚀 Mulai Duel (${duelPlayersData.length} pemain)
@@ -3542,8 +3593,58 @@
           ${duelPlayersData.length < 2 ? '<p style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:8px">Ajak teman gabung dulu, atau mulai sendiri untuk coba-coba 😊</p>' : ''}
         `;
       } else {
-        actionsEl.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.5)">Menunggu host memulai duel...</p>`;
+        configEl.style.display = 'none';
+        actionsEl.innerHTML = `<p style="font-size:0.85rem;color:rgba(255,255,255,0.5)">Menunggu host memilih level & memulai duel...</p>`;
       }
+    }
+
+    function renderModeratorLiveView() {
+      const el = document.getElementById('duel-lobby-live-watch');
+      if (!el) return;
+      const pemain = duelPlayersData.filter((p) => !p.isModerator);
+      const finishedCount = pemain.filter((p) => p.finished).length;
+      const sorted = [...pemain].sort((a, b) => (b.correctCount || 0) - (a.correctCount || 0) || (b.soalIndex || 0) - (a.soalIndex || 0));
+      const rows = sorted.map((p) => `
+        <div class="duel-mini-row">
+          <span>${p.name}${p.finished ? ' ✅' : ''}</span>
+          <span>Soal ${Math.min((p.soalIndex || 0) + (p.finished ? 0 : 1), duelRoomData?.totalSoal || 10)}/${duelRoomData?.totalSoal || 10} · ${p.correctCount || 0} benar</span>
+        </div>`).join('') || '<p style="color:rgba(255,255,255,0.4);font-size:0.8rem">Belum ada progres.</p>';
+
+      el.innerHTML = `
+        <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);text-align:center;margin-bottom:10px">
+          🧑‍⚖️ Kamu jadi juri — mengamati ${pemain.length} pemain
+        </p>
+        <div class="duel-mini-leaderboard" style="display:block">
+          <div class="dml-title">${finishedCount}/${pemain.length} pemain sudah selesai</div>
+          ${rows}
+        </div>
+        <button class="btn-main btn-yellow" style="max-width:280px;margin-top:14px" onclick="lihatHasilSebagaiJuri()">🏁 Lihat Hasil Ronde Ini</button>
+      `;
+    }
+
+    // Juri memutuskan lihat hasil (boleh sebelum semua pemain selesai)
+    function lihatHasilSebagaiJuri() {
+      duelIsModeratorViewing = true;
+      duelActiveRankTab = 'final';
+      sembunyikanTampilanHasilPribadi();
+      showScreen('screen-result');
+      document.getElementById('result-btns-normal').style.display = 'none';
+      document.getElementById('duel-result-panel').style.display = 'block';
+      renderDuelResultPanel('final');
+    }
+
+    function sembunyikanTampilanHasilPribadi() {
+      document.getElementById('result-emoji').style.display = 'none';
+      document.getElementById('result-name').style.display = 'none';
+      document.getElementById('result-score').parentElement.style.display = 'none';
+      document.getElementById('result-stars').style.display = 'none';
+      document.getElementById('result-msg').style.display = 'none';
+      const rev = document.getElementById('review-section');
+      if (rev) rev.innerHTML = '';
+    }
+    function pulihkanTampilanHasilNormal() {
+      document.getElementById('result-name').style.display = '';
+      document.getElementById('result-score').parentElement.style.display = '';
     }
 
     // Dipakai host untuk memulai ronde pertama MAUPUN ronde selanjutnya di room yang sama.
@@ -3554,14 +3655,30 @@
         level: duelSelLevel, levelName: namaLevel(duelSelLevel),
         method: duelSelMethod, methodName: hitungMethodLabelDuel(),
         kodeTier: duelSelKodeTier, kodeMode: duelSelKodeMode, kriptoTier: duelSelKriptoTier,
-        soalList: soalListDuel, prevRound: duelRoomData?.round || 0
+        soalList: soalListDuel, prevRound: duelRoomData?.round || 0, hostPlays: duelHostPlays
       });
-      if (!ok) showToast('Gagal memulai ronde, coba lagi.', 'red');
+      if (!ok) { showToast('Gagal memulai ronde, coba lagi.', 'red'); return; }
+      // Kalau host jadi juri, tandai player doc-nya supaya tidak ikut dihitung di leaderboard.
+      if (!duelHostPlays) {
+        window.__analytics?.updateDuelProgress(duelRoomCode, {
+          isModerator: true, finished: false, correctCount: 0, finalScore: null, timeTakenMs: null, soalIndex: 0
+        });
+      } else {
+        window.__analytics?.updateDuelProgress(duelRoomCode, { isModerator: false });
+      }
     }
 
     // ---- MULAI MAIN (reuse screen-game & seluruh mesin render solo) ----
     function mulaiDuelGame(room) {
       duelLastPlayedRound = room.round;
+
+      // Host memilih jadi juri untuk ronde ini — jangan ikut bermain, cukup amati.
+      if (duelIsHost && room.hostPlays === false) {
+        duelActive = false;
+        renderLobbyDuel();
+        return;
+      }
+
       duelActive = true;
       window.__analytics?.resetMyDuelProgress(duelRoomCode);
 
@@ -3583,7 +3700,8 @@
     function renderMiniLeaderboardDuel() {
       const el = document.getElementById('duel-mini-leaderboard');
       if (!el) return;
-      const sorted = [...duelPlayersData].sort((a, b) =>
+      const pemain = duelPlayersData.filter((p) => !p.isModerator);
+      const sorted = [...pemain].sort((a, b) =>
         (b.correctCount || 0) - (a.correctCount || 0) || (b.soalIndex || 0) - (a.soalIndex || 0));
       el.innerHTML = `<div class="dml-title">Progres Pemain</div>` + sorted.map((p) => `
         <div class="duel-mini-row">
@@ -3600,27 +3718,34 @@
       if (!panel) return;
 
       const myId = window.__analytics?.getVisitorId?.();
-      const totalPlayers = duelPlayersData.length;
-      const finishedCount = duelPlayersData.filter((p) => p.finished).length;
+      const pemain = duelPlayersData.filter((p) => !p.isModerator); // juri tidak ikut leaderboard
+      const totalPlayers = pemain.length;
+      const finishedCount = pemain.filter((p) => p.finished).length;
 
       // Peringkat di banner SELALU berdasarkan Nilai Akhir (gabungan), tidak ikut
       // berubah walau pemain sedang melihat tab Tercepat/Jawab Benar.
-      const sortedFinal = [...duelPlayersData].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+      const sortedFinal = [...pemain].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
       const myFinalIndex = sortedFinal.findIndex((p) => p.id === myId);
       const myFinalRank = myFinalIndex >= 0 ? myFinalIndex + 1 : null;
 
       let rankBadgeHtml = '';
-      if (myFinalRank) {
+      if (myFinalRank && !duelIsModeratorViewing) {
         const isTop = myFinalRank === 1;
         rankBadgeHtml = `
           <div class="duel-my-rank-badge ${isTop ? 'rank-gold' : 'rank-other'}">
             <div class="dmr-big">${isTop ? '🥇 JUARA 1!' : `#${myFinalRank} dari ${totalPlayers} pemain`}</div>
             <div class="dmr-sub">${isTop ? 'Kamu di puncak leaderboard!' : 'Terus semangat, kejar posisi 1! 💪'}</div>
           </div>`;
+      } else if (duelIsModeratorViewing) {
+        rankBadgeHtml = `
+          <div class="duel-my-rank-badge rank-other">
+            <div class="dmr-big">🧑‍⚖️ Hasil Ronde (Sudut Pandang Juri)</div>
+            <div class="dmr-sub">${finishedCount}/${totalPlayers} pemain sudah selesai</div>
+          </div>`;
       }
 
       // Daftar yang ditampilkan menyesuaikan tab yang sedang dipilih
-      let sorted = [...duelPlayersData];
+      let sorted = [...pemain];
       if (mode === 'speed') {
         sorted = sorted.filter((p) => p.finished).sort((a, b) => (a.timeTakenMs || Infinity) - (b.timeTakenMs || Infinity));
       } else if (mode === 'correct') {
@@ -3638,8 +3763,8 @@
         if (mode === 'speed') scoreDisplay = waktuStr;
         else if (mode === 'correct') scoreDisplay = `${p.correctCount || 0} benar`;
         else scoreDisplay = p.finished ? (p.finalScore ?? '-') : '⏳';
-        return `<div class="duel-mini-row" style="${isMe ? 'color:#FFD93D;font-weight:800' : ''}">
-          <span>${medal} ${p.name}${isMe ? ' (kamu)' : ''}</span><span>${scoreDisplay}</span>
+        return `<div class="duel-mini-row" style="${isMe && !duelIsModeratorViewing ? 'color:#FFD93D;font-weight:800' : ''}">
+          <span>${medal} ${p.name}${isMe && !duelIsModeratorViewing ? ' (kamu)' : ''}</span><span>${scoreDisplay}</span>
         </div>`;
       }).join('') || '<p style="color:rgba(255,255,255,0.4);font-size:0.8rem">Belum ada data.</p>';
 
@@ -3669,22 +3794,52 @@
       `;
     }
 
+    // ---- BAGIKAN LOBI (link + QR) ----
+    function toggleDuelSharePanel() {
+      const panel = document.getElementById('duel-share-panel');
+      if (!panel) return;
+      const willShow = panel.style.display !== 'block';
+      panel.style.display = willShow ? 'block' : 'none';
+      if (willShow) renderDuelSharePanel();
+    }
+
+    function renderDuelSharePanel() {
+      if (!duelRoomCode) return;
+      const url = `${GAME_URL}?duel=${duelRoomCode}`;
+      const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+      document.getElementById('duel-share-qr').src = qrSrc;
+      document.getElementById('duel-share-link-text').textContent = url;
+    }
+
+    function copyDuelLink() {
+      if (!duelRoomCode) return;
+      const url = `${GAME_URL}?duel=${duelRoomCode}`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link room disalin! 🔗', '');
+      }).catch(() => showToast('Gagal menyalin, coba salin manual ya.', 'red'));
+    }
+
+    function bagikanRoomWhatsApp() {
+      if (!duelRoomCode) return;
+      const url = `${GAME_URL}?duel=${duelRoomCode}`;
+      const text = `⚔️ Ayo mabar Game Matematika Anak bareng aku!\nKode room: ${duelRoomCode}\n\nLangsung gabung lewat link ini 👇\n${url}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
     function tinggalkanRoomDuel() {
       bersihkanListenerDuel();
       if (duelRoomCode) {
         if (duelIsHost) window.__analytics?.closeDuelRoom(duelRoomCode);
         else window.__analytics?.leaveDuelRoomAsPlayer(duelRoomCode);
       }
-      duelRoomCode = null; duelIsHost = false; duelActive = false;
+      duelRoomCode = null; duelIsHost = false; duelActive = false; duelIsModeratorViewing = false;
       duelRoomData = null; duelPlayersData = []; duelLastPlayedRound = 0;
       updateDockRoomBadge(null);
       const miniBoard = document.getElementById('duel-mini-leaderboard');
       if (miniBoard) miniBoard.style.display = 'none';
+      pulihkanTampilanHasilNormal();
       showScreen('screen-level');
     }
-
-    // ============================================================
-    // HASIL
 
     // ============================================================
     // HASIL
@@ -5115,7 +5270,7 @@
 
     // Mulai ronde baru di room yang SAMA (dipakai untuk "Main Lagi" / "Ganti Level"
     // tanpa membubarkan room — pemain lain tetap bisa lanjut ikut).
-    async function startNewRoundDuel(code, { level, levelName, method, methodName, kodeTier, kodeMode, kriptoTier, soalList, prevRound }) {
+    async function startNewRoundDuel(code, { level, levelName, method, methodName, kodeTier, kodeMode, kriptoTier, soalList, prevRound, hostPlays }) {
       try {
         if (!db) return false;
         await updateDoc(doc(db, 'quizRooms', code), {
@@ -5123,6 +5278,7 @@
           kodeTier: kodeTier || 0, kodeMode: kodeMode || 'normal', kriptoTier: kriptoTier || 'normal',
           soalList, totalSoal: soalList.length,
           status: 'playing', round: (prevRound || 0) + 1,
+          hostPlays: hostPlays !== false,
           startedAt: serverTimestamp(), expiresAt: duelExpiry()
         });
         return true;
