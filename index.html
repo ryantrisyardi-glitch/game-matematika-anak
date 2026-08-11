@@ -3393,6 +3393,7 @@
     let duelSelLevel = 1, duelSelMethod = 2, duelSelKodeTier = 2, duelSelKodeMode = 'normal', duelSelKriptoTier = 'normal';
     let duelHostPlays = true;               // host pilih ikut main (true) atau jadi juri/moderator (false)
     let duelIsModeratorViewing = false;     // sedang lihat hasil sebagai juri (bukan pemain yang baru selesai)
+    let duelModeratorState = 'idle';        // 'idle' (atur config) | 'watching' (amati ronde jalan) — state eksplisit, tidak ditebak dari status room
 
     function openDuelMenu() {
       trackEvent('buka_menu_duel', {});
@@ -3431,6 +3432,7 @@
       duelSelKodeTier = src.kodeTier || 2; duelSelKodeMode = src.kodeMode || 'normal';
       duelSelKriptoTier = src.kriptoTier || 'normal';
       duelIsModeratorViewing = false;
+      duelModeratorState = 'idle'; // paksa balik ke form pilih level, bukan tampilan "mengamati"
       pulihkanTampilanHasilNormal();
       masukLobbyDuel();
     }
@@ -3552,11 +3554,6 @@
     }
 
     // Sedang ada ronde berjalan yang host-nya (kita) pilih jadi juri/moderator?
-    function sedangMengamatiRondeSbgJuri() {
-      return duelIsHost && duelRoomData && duelRoomData.status === 'playing' &&
-        duelRoomData.round === duelLastPlayedRound && duelRoomData.hostPlays === false;
-    }
-
     function renderLobbyDuel() {
       document.getElementById('duel-lobby-code').textContent = duelRoomCode || '-----';
       const list = document.getElementById('duel-lobby-players');
@@ -3573,8 +3570,10 @@
       const watchEl = document.getElementById('duel-lobby-live-watch');
       const actionsEl = document.getElementById('duel-lobby-actions');
 
-      if (sedangMengamatiRondeSbgJuri()) {
-        // Host sedang jadi juri & ronde berjalan — tampilkan progres live, sembunyikan config
+      // Pakai state eksplisit (bukan cuma tebak dari status room), supaya begitu
+      // juri menekan "Ganti Level"/"Main Lagi", dia PASTI kembali ke form pilih
+      // level — tidak "ketarik" lagi ke tampilan mengamati ronde yang sama.
+      if (duelIsHost && duelModeratorState === 'watching') {
         configEl.style.display = 'none';
         watchEl.style.display = 'block';
         actionsEl.innerHTML = '';
@@ -3636,15 +3635,22 @@
     function sembunyikanTampilanHasilPribadi() {
       document.getElementById('result-emoji').style.display = 'none';
       document.getElementById('result-name').style.display = 'none';
-      document.getElementById('result-score').parentElement.style.display = 'none';
+      document.getElementById('result-score').style.display = 'none';
+      const resultOf = document.querySelector('#screen-result .result-of');
+      if (resultOf) resultOf.style.display = 'none';
       document.getElementById('result-stars').style.display = 'none';
       document.getElementById('result-msg').style.display = 'none';
       const rev = document.getElementById('review-section');
       if (rev) rev.innerHTML = '';
     }
     function pulihkanTampilanHasilNormal() {
+      document.getElementById('result-emoji').style.display = '';
       document.getElementById('result-name').style.display = '';
-      document.getElementById('result-score').parentElement.style.display = '';
+      document.getElementById('result-score').style.display = '';
+      const resultOf = document.querySelector('#screen-result .result-of');
+      if (resultOf) resultOf.style.display = '';
+      document.getElementById('result-stars').style.display = '';
+      document.getElementById('result-msg').style.display = '';
     }
 
     // Dipakai host untuk memulai ronde pertama MAUPUN ronde selanjutnya di room yang sama.
@@ -3675,10 +3681,16 @@
       // Host memilih jadi juri untuk ronde ini — jangan ikut bermain, cukup amati.
       if (duelIsHost && room.hostPlays === false) {
         duelActive = false;
+        duelModeratorState = 'watching';
+        duelIsModeratorViewing = false;
+        pulihkanTampilanHasilNormal();
+        showScreen('screen-duel-lobby');
+        updateDockRoomBadge(duelRoomCode);
         renderLobbyDuel();
         return;
       }
 
+      duelModeratorState = 'idle';
       duelActive = true;
       window.__analytics?.resetMyDuelProgress(duelRoomCode);
 
@@ -3833,6 +3845,7 @@
         else window.__analytics?.leaveDuelRoomAsPlayer(duelRoomCode);
       }
       duelRoomCode = null; duelIsHost = false; duelActive = false; duelIsModeratorViewing = false;
+      duelModeratorState = 'idle';
       duelRoomData = null; duelPlayersData = []; duelLastPlayedRound = 0;
       updateDockRoomBadge(null);
       const miniBoard = document.getElementById('duel-mini-leaderboard');
