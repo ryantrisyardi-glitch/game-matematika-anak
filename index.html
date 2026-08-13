@@ -2556,6 +2556,7 @@
       const val = document.getElementById('input-nama').value.trim();
       if (!val) { showToast('Masukkan namamu dulu! 😊', 'red'); return; }
       playerName = val;
+      try { localStorage.setItem('matika_player_name', playerName); } catch (e) { /* abaikan */ }
       identifyPlayer(playerName);
       trackEvent('mulai_main');
       window.__analytics?.updateVisitorName(playerName);
@@ -3009,7 +3010,7 @@
         playCorrect();
         document.getElementById('hint-text').textContent = `✅ Benar! ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
-        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score });
+        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal + 1, correctCount: score, finished: false, round: duelRoomData?.round || 0 });
         setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1300);
       }
     }
@@ -3069,7 +3070,7 @@
         playCorrect();
         document.getElementById('hint-text').textContent = `✅ Benar! ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
-        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score });
+        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal + 1, correctCount: score, finished: false, round: duelRoomData?.round || 0 });
         setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1200);
       } else {
         el.classList.remove('correct'); el.classList.add('wrong');
@@ -3077,7 +3078,7 @@
         playError();
         document.getElementById('hint-text').textContent = `❌ Jawaban yang benar: ${soal.a} ${soal.op} ${soal.b} = ${soal.ans}`;
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal, score, lastAnswerCorrect: false });
-        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score });
+        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score, finished: false, round: duelRoomData?.round || 0 });
         document.getElementById('next-wrap').style.display = 'block';
       }
     }
@@ -3265,7 +3266,7 @@
         playCorrect();
         document.getElementById('hint-text').textContent = `✅ Benar! ${exprTxt} = ${soal.ans}`;
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
-        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score });
+        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal + 1, correctCount: score, finished: false, round: duelRoomData?.round || 0 });
         setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1200);
       } else {
         el.classList.remove('correct'); el.classList.add('wrong');
@@ -3273,7 +3274,7 @@
         playError();
         document.getElementById('hint-text').textContent = `❌ Jawaban yang benar: ${exprTxt} = ${soal.ans}`;
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal, score, lastAnswerCorrect: false });
-        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score });
+        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score, finished: false, round: duelRoomData?.round || 0 });
         document.getElementById('next-wrap').style.display = 'block';
       }
     }
@@ -3369,14 +3370,14 @@
         playCorrect();
         document.getElementById('hint-text').textContent = `✅ Tepat sekali! ${soal.letterWord1}+${soal.letterWord2}=${soal.letterSum} → ${v1} + ${v2} = ${vs}`;
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal + 1, score, lastAnswerCorrect: true });
-        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score });
+        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal + 1, correctCount: score, finished: false, round: duelRoomData?.round || 0 });
         setTimeout(() => { currentSoal++; currentSoal >= totalSoal ? tampilHasil() : tampilSoal(); }, 1600);
       } else {
         waitingNext = true;
         playError();
         document.getElementById('hint-text').textContent = `❌ Belum pas. ${v1} + ${v2} = ${v1 + v2}, padahal seharusnya = ${vs}. Coba lihat jawaban benarnya lalu lanjut ya.`;
         window.__analytics?.updateLiveSession({ soalIndex: currentSoal, score, lastAnswerCorrect: false });
-        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score });
+        if (duelActive) window.__analytics?.updateDuelProgress(duelRoomCode, { soalIndex: currentSoal, correctCount: score, finished: false, round: duelRoomData?.round || 0 });
         document.getElementById('next-wrap').style.display = 'block';
       }
     }
@@ -3417,6 +3418,7 @@
       });
       if (!code) { showToast('Gagal membuat room, coba lagi.', 'red'); return; }
       duelRoomCode = code; duelIsHost = true; duelLastPlayedRound = 0;
+      simpanSesiDuelKeStorage();
       trackEvent('duel_buat_room', {});
       mulaiDengarkanRoomDuel();
       masukLobbyDuel();
@@ -3512,6 +3514,7 @@
       // Kalau room sedang 'playing' saat kita gabung, JANGAN langsung nyemplung ke ronde
       // yang sudah berjalan — tandai supaya kita otomatis ikut mulai di ronde BERIKUTNYA.
       duelLastPlayedRound = (result.room.status === 'playing') ? (result.room.round || 0) : 0;
+      simpanSesiDuelKeStorage();
       trackEvent('duel_gabung_room', {});
       mulaiDengarkanRoomDuel();
       masukLobbyDuel();
@@ -3692,7 +3695,7 @@
 
       duelModeratorState = 'idle';
       duelActive = true;
-      window.__analytics?.resetMyDuelProgress(duelRoomCode);
+      window.__analytics?.resetMyDuelProgress(duelRoomCode, room.round);
 
       soalList = room.soalList; totalSoal = soalList.length;
       currentSoal = 0; score = 0; waitingNext = false;
@@ -3844,6 +3847,7 @@
         if (duelIsHost) window.__analytics?.closeDuelRoom(duelRoomCode);
         else window.__analytics?.leaveDuelRoomAsPlayer(duelRoomCode);
       }
+      hapusSesiDuelDariStorage();
       duelRoomCode = null; duelIsHost = false; duelActive = false; duelIsModeratorViewing = false;
       duelModeratorState = 'idle';
       duelRoomData = null; duelPlayersData = []; duelLastPlayedRound = 0;
@@ -3853,6 +3857,117 @@
       pulihkanTampilanHasilNormal();
       showScreen('screen-level');
     }
+
+    // ============================================================
+    // PERSISTENSI SESI — supaya refresh HP tidak sengaja tidak bikin
+    // pemain "hilang" dari room/soal yang sedang dikerjakan.
+    // ============================================================
+    function simpanSesiDuelKeStorage() {
+      try { localStorage.setItem('matika_duel_session', JSON.stringify({ roomCode: duelRoomCode })); }
+      catch (e) { /* localStorage tak tersedia — abaikan, fitur resume tetap bisa gagal dengan aman */ }
+    }
+    function hapusSesiDuelDariStorage() {
+      try { localStorage.removeItem('matika_duel_session'); } catch (e) { /* abaikan */ }
+    }
+
+    // Lanjutkan ronde yang sedang berjalan PERSIS dari soal & skor terakhir yang
+    // tersimpan di Firestore (bukan mulai dari 0 lagi) — dipakai saat menyambung
+    // ulang setelah refresh halaman di tengah-tengah duel.
+    function resumeDuelRound(room, myData) {
+      duelLastPlayedRound = room.round;
+      duelModeratorState = 'idle';
+
+      if (duelIsHost && room.hostPlays === false) {
+        duelActive = false;
+        duelModeratorState = 'watching';
+        showScreen('screen-duel-lobby');
+        updateDockRoomBadge(duelRoomCode);
+        renderLobbyDuel();
+        return;
+      }
+
+      duelActive = true;
+      soalList = room.soalList; totalSoal = soalList.length;
+      currentSoal = Math.min(myData.soalIndex || 0, totalSoal);
+      score = myData.correctCount || 0;
+      waitingNext = false;
+      currentLevel = room.level; currentMethod = room.method;
+      currentKodeTier = room.kodeTier || 0; currentKodeMode = room.kodeMode || 'normal';
+      currentKriptoTier = room.kriptoTier || 'normal';
+      duelStartedAtMillis = (room.startedAt && room.startedAt.toMillis) ? room.startedAt.toMillis() : Date.now();
+
+      document.getElementById('info-level').textContent = `⚔️ Duel · ${namaLevel(room.level)}`;
+      document.getElementById('duel-mini-leaderboard').style.display = 'block';
+      showScreen('screen-game');
+      if (currentSoal >= totalSoal) {
+        tampilHasil();
+      } else {
+        tampilSoal();
+        showToast(`Lanjut dari soal ${currentSoal + 1}! 💪`, '');
+      }
+    }
+
+    // Dipanggil sekali saat halaman dibuka: kalau nama & (opsional) sesi duel
+    // sebelumnya tersimpan, langsung lewati layar isi nama dan — kalau memang
+    // sedang di tengah ronde duel — lanjutkan persis dari soal terakhir.
+    async function cobaPulihkanSesiTersimpan() {
+      let savedName = null;
+      try { savedName = localStorage.getItem('matika_player_name'); } catch (e) { /* abaikan */ }
+      if (!savedName) return; // tidak ada apa-apa yang bisa dipulihkan, biarkan alur normal (isi nama)
+
+      playerName = savedName;
+      identifyPlayer(playerName);
+      updateDockNameBadge();
+      window.__analytics?.updateVisitorName(playerName);
+      document.getElementById('greeting-text').textContent = `Halo, ${playerName}! Pilih levelmu 🎉`;
+
+      if (pendingDuelJoinCode) {
+        showScreen('screen-level');
+        prosesPendingDuelJoin();
+        return;
+      }
+
+      let savedDuel = null;
+      try { savedDuel = JSON.parse(localStorage.getItem('matika_duel_session') || 'null'); } catch (e) { /* abaikan */ }
+
+      if (savedDuel && savedDuel.roomCode) {
+        showScreen('screen-level');
+        showToast('Menyambungkan ke room sebelumnya...', '');
+        const result = await window.__analytics?.reconnectDuelRoom(savedDuel.roomCode, playerName);
+        if (!result?.ok) {
+          hapusSesiDuelDariStorage();
+          return; // room memang sudah tidak ada / expired — tetap di menu level, tidak apa-apa
+        }
+        duelRoomCode = savedDuel.roomCode;
+        duelIsHost = (result.room.hostVisitorId === window.__analytics?.getVisitorId?.());
+        mulaiDengarkanRoomDuel();
+
+        const myData = result.myPlayerData;
+        const roundCocok = myData && myData.round === result.room.round;
+        if (result.room.status === 'playing' && myData && !myData.finished && roundCocok) {
+          resumeDuelRound(result.room, myData);
+        } else {
+          // Ronde sudah berganti / belum ada progres — kembali ke lobi dengan aman,
+          // TIDAK dianggap kalah/diskualifikasi, cukup menunggu ronde berikutnya.
+          duelLastPlayedRound = result.room.round || 0;
+          masukLobbyDuel();
+        }
+        return;
+      }
+
+      showScreen('screen-level');
+    }
+
+    // Tunggu modul analytics (Firestore) siap sebelum mencoba pulihkan sesi,
+    // supaya panggilan reconnectDuelRoom tidak gagal karena db belum terhubung.
+    // Dipanggil langsung (bukan lewat event load) karena skrip ini sudah berada
+    // di akhir <body> — semua elemen screen di atas sudah pasti ada di DOM.
+    function tungguAnalyticsLaluPulihkanSesi(percobaan) {
+      percobaan = percobaan || 0;
+      if (window.__analytics || percobaan > 40) { cobaPulihkanSesiTersimpan(); return; }
+      setTimeout(() => tungguAnalyticsLaluPulihkanSesi(percobaan + 1), 100);
+    }
+    tungguAnalyticsLaluPulihkanSesi();
 
     // ============================================================
     // HASIL
@@ -3889,8 +4004,12 @@
       document.getElementById('result-total').textContent = '10';
       document.getElementById('result-msg').textContent = msg;
 
-      // Mode Duel: sembunyikan emoji besar & bintang, cukup nama + skor + leaderboard
+      // Mode Duel: sembunyikan emoji besar, skor mentah, & bintang —
+      // cukup nama + leaderboard (skor final sudah ada di panel leaderboard).
       document.getElementById('result-emoji').style.display = duelActive ? 'none' : '';
+      document.getElementById('result-score').style.display = duelActive ? 'none' : '';
+      const resultOfEl = document.querySelector('#screen-result .result-of');
+      if (resultOfEl) resultOfEl.style.display = duelActive ? 'none' : '';
       starsWrap.style.display = duelActive ? 'none' : 'flex';
       document.getElementById('result-msg').style.display = duelActive ? 'none' : '';
 
@@ -3976,6 +4095,20 @@
       const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? 'Mode Kriptaritma' : 'Metode Angka'));
       const bar = '⭐'.repeat(score) + '☆'.repeat(10 - score);
       return `🎮 Game Matematika Anak\n👤 ${playerName} baru saja bermain!\n📚 ${level} · ${method}\n🏆 Skor: ${score}/10\n${bar}\n\nAyo main juga! 👇\n${GAME_URL}`;
+    }
+
+    function buatShareTextDuel() {
+      const roomSrc = duelIsModeratorViewing ? (duelRoomData || {}) : { level: currentLevel };
+      const level = namaLevel(roomSrc.level || 1);
+      const myId = window.__analytics?.getVisitorId?.();
+      const pemain = duelPlayersData.filter((p) => !p.isModerator);
+      const sortedFinal = [...pemain].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+      const myRank = sortedFinal.findIndex((p) => p.id === myId) + 1;
+      if (duelIsModeratorViewing) {
+        const finishedCount = pemain.filter((p) => p.finished).length;
+        return `🎮 Game Matematika Anak — Mode Duel ⚔️\n🧑‍⚖️ ${playerName} jadi juri di ${level}!\n🏁 ${finishedCount}/${pemain.length} pemain sudah selesai\n\nAyo ikutan mabar! 👇\n${GAME_URL}`;
+      }
+      return `🎮 Game Matematika Anak — Mode Duel ⚔️\n👤 ${playerName} baru saja mabar!\n📚 ${level}\n🏆 Peringkat #${myRank || '-'} dari ${pemain.length} pemain\n\nAyo ikutan mabar! 👇\n${GAME_URL}`;
     }
 
     function buatGambarShare() {
@@ -4237,15 +4370,23 @@
     function buatGambarShareDuel() {
       return new Promise((resolve, reject) => {
         try {
-          const level = namaLevel(currentLevel);
-          const method = currentMethod === 1 ? 'Metode Gambar' : (currentMethod === 3 ? `Mode Kode ${currentKodeTier} Tingkat` : (currentMethod === 4 ? 'Mode Kriptaritma' : 'Metode Angka'));
+          // Untuk juri, currentLevel/currentMethod TIDAK PERNAH terisi (mereka tidak
+          // pernah masuk ke screen-game) — pakai data dari room, bukan variabel solo.
+          const roomSrc = duelIsModeratorViewing ? (duelRoomData || {}) : {
+            level: currentLevel, method: currentMethod, kodeTier: currentKodeTier, kriptoTier: currentKriptoTier
+          };
+          const level = namaLevel(roomSrc.level || 1);
+          const method = roomSrc.method === 1 ? 'Metode Gambar' : (roomSrc.method === 3 ? `Mode Kode ${roomSrc.kodeTier || ''} Tingkat` : (roomSrc.method === 4 ? 'Mode Kriptaritma' : 'Metode Angka'));
 
           const myId = window.__analytics?.getVisitorId?.();
-          const sortedFinal = [...duelPlayersData].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+          // Juri/moderator tidak ikut dihitung sebagai peserta leaderboard.
+          const pemain = duelPlayersData.filter((p) => !p.isModerator);
+          const sortedFinal = [...pemain].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
           const myIndex = sortedFinal.findIndex((p) => p.id === myId);
           const myRank = myIndex >= 0 ? myIndex + 1 : null;
-          const totalPlayers = duelPlayersData.length;
+          const totalPlayers = pemain.length;
           const isTop = myRank === 1;
+          const akuJuri = duelIsModeratorViewing;
 
           const W = 640, H = 960;
           const cv = document.getElementById('share-canvas');
@@ -4324,10 +4465,16 @@
 
           ctx.font = 'bold 34px Arial,sans-serif';
           ctx.fillStyle = isTop ? '#1a1a2e' : '#4D96FF';
-          ctx.fillText(isTop ? '🥇 JUARA 1!' : (myRank ? `#${myRank} dari ${totalPlayers} pemain` : 'Sudah Main Duel!'), W / 2, rbY + 58);
+          const bannerTitle = akuJuri
+            ? '🧑‍⚖️ Hasil Ronde (Juri)'
+            : (isTop ? '🥇 JUARA 1!' : (myRank ? `#${myRank} dari ${totalPlayers} pemain` : 'Sudah Main Duel!'));
+          ctx.fillText(bannerTitle, W / 2, rbY + 58);
           ctx.font = 'bold 16px Arial,sans-serif';
           ctx.fillStyle = isTop ? 'rgba(26,26,46,0.75)' : 'rgba(77,150,255,0.75)';
-          ctx.fillText(isTop ? 'Di puncak leaderboard!' : 'Terus semangat, kejar posisi 1!', W / 2, rbY + 90);
+          const bannerSub = akuJuri
+            ? `${pemain.filter((p) => p.finished).length}/${totalPlayers} pemain sudah selesai`
+            : (isTop ? 'Di puncak leaderboard!' : 'Terus semangat, kejar posisi 1!');
+          ctx.fillText(bannerSub, W / 2, rbY + 90);
 
           // ── BADGE LEVEL/METODE ──
           ctx.font = 'bold 14px Arial,sans-serif';
@@ -4423,8 +4570,9 @@
       if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Menyiapkan...'; }
 
       try {
-        const cv = duelActive ? await buatGambarShareDuel() : await buatGambarShare();
-        const shareText = buatShareText();
+        const sedangDuel = duelActive || duelIsModeratorViewing;
+        const cv = sedangDuel ? await buatGambarShareDuel() : await buatGambarShare();
+        const shareText = sedangDuel ? buatShareTextDuel() : buatShareText();
         const TITLE = '🎮 Game Matematika Anak';
 
         // Bungkus toBlob dalam Promise agar await bisa bekerja
@@ -4498,15 +4646,24 @@
     function bagikanWhatsApp() {
       trackEvent('bagikan_whatsapp', { level: currentLevel, method: currentMethod });
       const trackedUrl = `${GAME_URL}?src=whatsapp`;
-      const score = parseInt(document.getElementById('result-score').textContent) || 0;
-      const level = namaLevel(currentLevel);
+      const sedangDuel = duelActive || duelIsModeratorViewing;
       let text;
-      if (duelActive) {
+      if (sedangDuel) {
+        const roomSrc = duelIsModeratorViewing ? (duelRoomData || {}) : { level: currentLevel };
+        const level = namaLevel(roomSrc.level || 1);
         const myId = window.__analytics?.getVisitorId?.();
-        const sortedFinal = [...duelPlayersData].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+        const pemain = duelPlayersData.filter((p) => !p.isModerator);
+        const sortedFinal = [...pemain].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
         const myRank = sortedFinal.findIndex((p) => p.id === myId) + 1;
-        text = `🎮 Game Matematika Anak — Mode Duel ⚔️\n👤 ${playerName} baru saja mabar!\n📚 ${level}\n🏆 Peringkat #${myRank} dari ${duelPlayersData.length} pemain\n\nAyo ikutan mabar, seru banget! 👇\n${trackedUrl}`;
+        if (duelIsModeratorViewing) {
+          const finishedCount = pemain.filter((p) => p.finished).length;
+          text = `🎮 Game Matematika Anak — Mode Duel ⚔️\n🧑‍⚖️ ${playerName} baru saja jadi juri di sebuah ronde!\n📚 ${level}\n🏁 ${finishedCount}/${pemain.length} pemain sudah selesai\n\nAyo ikutan mabar, seru banget! 👇\n${trackedUrl}`;
+        } else {
+          text = `🎮 Game Matematika Anak — Mode Duel ⚔️\n👤 ${playerName} baru saja mabar!\n📚 ${level}\n🏆 Peringkat #${myRank || '-'} dari ${pemain.length} pemain\n\nAyo ikutan mabar, seru banget! 👇\n${trackedUrl}`;
+        }
       } else {
+        const score = parseInt(document.getElementById('result-score').textContent) || 0;
+        const level = namaLevel(currentLevel);
         text = `🎮 Game Matematika Anak\n👤 ${playerName} baru saja bermain!\n📚 ${level} · Skor ${score}/10\n\nAyo main juga, seru banget! 👇\n${trackedUrl}`;
       }
       const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -4516,16 +4673,30 @@
     async function bagikanInstagram() {
       trackEvent('bagikan_instagram', { level: currentLevel, method: currentMethod });
       const trackedUrl = `${GAME_URL}?src=instagram`;
-      const score = parseInt(document.getElementById('result-score').textContent) || 0;
-      const level = namaLevel(currentLevel);
-      const caption = `🎮 Game Matematika Anak — ${playerName} skor ${score}/10 di ${level}! Main juga yuk: ${trackedUrl}`;
+      const sedangDuel = duelActive || duelIsModeratorViewing;
+      let caption;
+      if (sedangDuel) {
+        const roomSrc = duelIsModeratorViewing ? (duelRoomData || {}) : { level: currentLevel };
+        const level = namaLevel(roomSrc.level || 1);
+        const myId = window.__analytics?.getVisitorId?.();
+        const pemain = duelPlayersData.filter((p) => !p.isModerator);
+        const sortedFinal = [...pemain].sort((a, b) => (b.finalScore ?? -Infinity) - (a.finalScore ?? -Infinity));
+        const myRank = sortedFinal.findIndex((p) => p.id === myId) + 1;
+        caption = duelIsModeratorViewing
+          ? `🎮 Game Matematika Anak — Mode Duel ⚔️ ${playerName} jadi juri di ${level}! Main juga yuk: ${trackedUrl}`
+          : `🎮 Game Matematika Anak — Mode Duel ⚔️ ${playerName} peringkat #${myRank || '-'} di ${level}! Main juga yuk: ${trackedUrl}`;
+      } else {
+        const score = parseInt(document.getElementById('result-score').textContent) || 0;
+        const level = namaLevel(currentLevel);
+        caption = `🎮 Game Matematika Anak — ${playerName} skor ${score}/10 di ${level}! Main juga yuk: ${trackedUrl}`;
+      }
 
       try {
         await navigator.clipboard.writeText(caption);
       } catch (e) { /* abaikan jika clipboard tak tersedia */ }
 
       try {
-        const cv = duelActive ? await buatGambarShareDuel() : await buatGambarShare();
+        const cv = sedangDuel ? await buatGambarShareDuel() : await buatGambarShare();
         const blob = await new Promise((res, rej) => {
           cv.toBlob(b => b ? res(b) : rej(new Error('toBlob null')), 'image/png', 0.92);
         });
@@ -4793,6 +4964,9 @@
     const isStandaloneNow = () =>
       window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const isIOSDevice = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isAndroidDevice = () => /android/i.test(navigator.userAgent);
+    const isSamsungBrowser = () => /SamsungBrowser/i.test(navigator.userAgent);
+    const isMobileDevice = () => isIOSDevice() || isAndroidDevice();
 
     function showInstallButton() {
       if (isStandaloneNow()) return; // sudah terinstall, tidak perlu tampilkan apa pun
@@ -4827,16 +5001,30 @@
         });
         return;
       }
-      // iOS Safari tidak mendukung prompt otomatis — tampilkan instruksi manual.
+      // Browser ini tidak mendukung/tidak memicu prompt otomatis (umum terjadi di
+      // Samsung Internet & sebagian browser Android/iOS lain) — kasih instruksi manual
+      // supaya pengguna tetap bisa install, bukan cuma tombolnya nongol tanpa fungsi.
       if (isIOSDevice()) {
         showToast('Tap tombol Bagikan (⬆️) di Safari, lalu pilih "Tambah ke Layar Utama" 📲', '');
+      } else if (isSamsungBrowser()) {
+        showToast('Tap menu (☰) di bawah layar, lalu pilih "Tambahkan halaman ke" → "Layar Utama" 📲', '');
+      } else if (isAndroidDevice()) {
+        showToast('Tap menu (⋮ titik tiga) di pojok, lalu pilih "Install app" / "Tambahkan ke layar Utama" 📲', '');
+      } else {
+        showToast('Cari menu "Install" atau "Tambahkan ke Layar Utama" di browser kamu 📲', '');
       }
     }
 
-    // Di iOS, beforeinstallprompt tidak pernah tersedia, jadi tampilkan tombolnya
-    // secara manual (kalau belum terinstall) supaya pengguna iOS tetap tahu caranya.
+    // Tampilkan tombol install untuk SEMUA perangkat mobile (iOS maupun Android),
+    // walau event beforeinstallprompt tidak sempat/tidak pernah terpicu — ini umum
+    // terjadi di Samsung Internet & sebagian browser Android lain yang tetap
+    // mendukung "Tambahkan ke Layar Utama" tapi lewat menu manual, bukan event W3C
+    // standar. Diberi jeda dulu supaya beforeinstallprompt (kalau ada) sempat terpicu
+    // lebih dulu dan dapat prompt native yang lebih mulus.
     window.addEventListener('load', () => {
-      if (isIOSDevice() && !isStandaloneNow()) showInstallButton();
+      if (isMobileDevice() && !isStandaloneNow()) {
+        setTimeout(() => { if (!isStandaloneNow()) showInstallButton(); }, 1500);
+      }
     });
 
     // ============================================================
@@ -5303,12 +5491,13 @@
 
     // Dipanggil oleh SETIAP pemain (bukan cuma host) begitu mereka mendeteksi
     // room.round berubah, supaya progres pribadi mereka bersih untuk ronde baru.
-    async function resetMyDuelProgress(code) {
+    async function resetMyDuelProgress(code, round) {
       try {
         if (!db) return;
         await setDoc(doc(db, 'quizRooms', code, 'players', visitorId), {
           soalIndex: 0, correctCount: 0, finished: false,
           finishedAt: null, timeTakenMs: null, finalScore: null,
+          round: round || 0,
           lastUpdate: serverTimestamp()
         }, { merge: true });
       } catch (e) { console.warn('[Duel] Gagal reset progres:', e); }
@@ -5331,6 +5520,41 @@
         return { ok: true, room };
       } catch (e) {
         console.warn('[Duel] Gagal gabung room:', e);
+        return { ok: false, reason: 'Terjadi kesalahan, coba lagi.' };
+      }
+    }
+
+    // Dipakai saat HALAMAN DI-REFRESH sementara masih di dalam room duel.
+    // BEDA dengan joinDuelRoom: kalau dokumen pemain ini sudah ada sebelumnya
+    // (soalIndex/correctCount tersimpan), progresnya TIDAK direset — supaya
+    // pemain bisa lanjut dari soal terakhir, bukan didiskualifikasi / mulai dari 0.
+    async function reconnectDuelRoom(code, playerName) {
+      if (!db) return { ok: false, reason: 'Analytics belum siap.' };
+      try {
+        const roomSnap = await getDoc(doc(db, 'quizRooms', code));
+        if (!roomSnap.exists()) return { ok: false, reason: 'Room sudah tidak ada.' };
+        const room = roomSnap.data();
+
+        const myRef = doc(db, 'quizRooms', code, 'players', visitorId);
+        const mySnap = await getDoc(myRef);
+
+        if (mySnap.exists()) {
+          // Sudah pernah gabung sebelumnya — cukup perbarui waktu aktif & nama,
+          // JANGAN sentuh soalIndex/correctCount/finished.
+          await updateDoc(myRef, { lastUpdate: serverTimestamp(), name: playerName });
+          return { ok: true, room, myPlayerData: mySnap.data() };
+        }
+
+        // Belum pernah gabung di room ini (mis. link dibagikan orang lain) — perlakukan seperti gabung baru.
+        await setDoc(myRef, {
+          name: playerName, isHost: (room.hostVisitorId === visitorId), joinedAt: serverTimestamp(),
+          soalIndex: 0, correctCount: 0, finished: false,
+          finishedAt: null, timeTakenMs: null, finalScore: null,
+          lastUpdate: serverTimestamp()
+        });
+        return { ok: true, room, myPlayerData: null };
+      } catch (e) {
+        console.warn('[Duel] Gagal menyambung ulang room:', e);
         return { ok: false, reason: 'Terjadi kesalahan, coba lagi.' };
       }
     }
@@ -5411,7 +5635,7 @@
       startLiveSession, updateLiveSession, endLiveSession,
       getLiveCode: () => liveSessionCode,
       submitFeedback,
-      createDuelRoom, joinDuelRoom, listenDuelRoom, listenDuelPlayers,
+      createDuelRoom, joinDuelRoom, reconnectDuelRoom, listenDuelRoom, listenDuelPlayers,
       startNewRoundDuel, resetMyDuelProgress, updateDuelProgress, finishDuelPlayer,
       closeDuelRoom, leaveDuelRoomAsPlayer,
       getVisitorId: () => visitorId
