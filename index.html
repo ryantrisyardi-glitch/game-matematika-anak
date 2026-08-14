@@ -488,9 +488,9 @@
       border: 2px solid rgba(255, 255, 255, 0.2);
       background: rgba(255, 255, 255, 0.08);
       color: #fff;
-      font-size: 1.3rem;
+      font-size: clamp(1rem, 5vw, 1.3rem);
       font-weight: 900;
-      letter-spacing: 5px;
+      letter-spacing: 3px;
       text-align: center;
       text-transform: uppercase;
       outline: none;
@@ -501,9 +501,9 @@
     .duel-code-input:focus { border-color: #FFD93D; }
 
     .duel-code-big {
-      font-size: 2rem;
+      font-size: clamp(1.3rem, 7vw, 2rem);
       font-weight: 900;
-      letter-spacing: 8px;
+      letter-spacing: 4px;
       color: #FFD93D;
       background: rgba(255, 217, 61, 0.1);
       border: 1px solid rgba(255, 217, 61, 0.35);
@@ -511,6 +511,7 @@
       padding: 14px;
       text-align: center;
       margin-bottom: 16px;
+      word-break: break-all;
     }
 
     .duel-player-list {
@@ -2065,7 +2066,7 @@
   <div id="screen-duel-join" class="screen">
     <h2>🔑 Gabung Room</h2>
     <p class="sub">Masukkan kode dari temanmu!</p>
-    <input type="text" id="duel-join-code" class="duel-code-input" placeholder="KODE5" maxlength="5">
+    <input type="text" id="duel-join-code" class="duel-code-input" placeholder="KURSI" maxlength="12">
     <button class="btn-main btn-yellow" onclick="gabungRoomDuel()">Gabung! 🚀</button>
     <div id="duel-join-msg" style="font-size:0.85rem;min-height:18px;margin-top:10px"></div>
     <div class="back-row">
@@ -5429,11 +5430,50 @@
     // MODE DUEL (Multiplayer real-time) — room + pemain + ranking
     // ============================================================
     const DUEL_ROOM_TTL_HOURS = 3;
+
+    // Bank kata untuk kode room — jauh lebih gampang diingat & diketik anak-anak
+    // dibanding kode acak (mis. "KURSI" vs "X7K2P"). Campuran Bahasa Indonesia
+    // & Inggris, kata-kata umum/ramah anak, panjang wajar untuk diketik di HP.
+    const KODE_KATA_BANK = [
+      // Bahasa Indonesia — benda & tempat sehari-hari
+      'KURSI', 'MEJA', 'BUKU', 'PENSIL', 'SEKOLAH', 'GURU', 'MURID', 'TEMAN', 'KELUARGA', 'RUMAH',
+      'MOBIL', 'SEPEDA', 'BOLA', 'LAYANG', 'GUNUNG', 'LAUT', 'SUNGAI', 'HUTAN', 'BUNGA', 'POHON',
+      'JENDELA', 'PINTU', 'LAMPU', 'PAYUNG', 'TAS', 'SEPATU', 'TOPI', 'BAJU', 'JAM', 'KOMPAS',
+      // Bahasa Indonesia — hewan
+      'BURUNG', 'KUCING', 'ANJING', 'IKAN', 'GAJAH', 'HARIMAU', 'SINGA', 'KELINCI', 'AYAM', 'BEBEK',
+      'KUPU', 'LEBAH', 'KATAK', 'KURA', 'BURUNGHANTU', 'MERPATI', 'ELANG', 'PAUS', 'LUMBA', 'KANGURU',
+      // Bahasa Indonesia — alam
+      'MATAHARI', 'BULAN', 'BINTANG', 'AWAN', 'HUJAN', 'ANGIN', 'PELANGI', 'LAUTAN', 'PANTAI', 'PULAU',
+      'AIR', 'API', 'TANAH', 'BATU', 'PASIR', 'SALJU', 'PETIR', 'OMBAK', 'KARANG', 'MUTIARA',
+      // Bahasa Indonesia — warna & sifat
+      'MERAH', 'KUNING', 'HIJAU', 'UNGU', 'ORANYE', 'COKLAT', 'PUTIH', 'HITAM', 'PERAK', 'EMAS',
+      'BERANI', 'PINTAR', 'RAJIN', 'JUJUR', 'BAIK', 'CERIA', 'KUAT', 'CEPAT', 'LINCAH', 'HEBAT',
+      // Bahasa Indonesia — imajinasi & makanan
+      'JUARA', 'PAHLAWAN', 'RAJA', 'RATU', 'PANGERAN', 'PUTRI', 'NAGA', 'KUDA', 'PERI', 'ROBOT',
+      'ROKET', 'PLANET', 'BUMI', 'ANGKASA', 'KOMET', 'GALAKSI', 'SATELIT', 'ASTRONOT', 'TEROPONG', 'MERIAM',
+      'PIZZA', 'BURGER', 'NASI', 'SATE', 'BAKSO', 'MIE', 'SUP', 'KUE', 'JAJAN', 'PERMEN',
+      'GITAR', 'PIANO', 'DRUM', 'SULING', 'ANGKLUNG', 'LAGU', 'MUSIK', 'TARI', 'LUKIS', 'WARNA',
+
+      // Bahasa Inggris — kata umum & sifat
+      'SMART', 'MONEY', 'HAPPY', 'BRAVE', 'QUICK', 'SUPER', 'MAGIC', 'DREAM', 'POWER', 'LUCKY',
+      'SHINY', 'MIGHTY', 'CLEVER', 'GENTLE', 'JOLLY', 'FUNKY', 'SPARKY', 'BREEZY', 'SUNNY', 'STORMY',
+      // Bahasa Inggris — hewan & makhluk
+      'TIGER', 'EAGLE', 'SHARK', 'ANDROID', 'FALCON', 'PHOENIX', 'GRIFFIN', 'UNICORN', 'MERMAID', 'DRAGON',
+      'PANDA', 'KOALA', 'RABBIT', 'TURTLE', 'DOLPHIN', 'PENGUIN', 'CHEETAH', 'LEOPARD', 'PANTHER', 'COBRA',
+      // Bahasa Inggris — luar angkasa & alam
+      'ROCKET', 'ASTEROID', 'GALAXY', 'WIZARD', 'KNIGHT', 'CASTLE', 'FOREST', 'OCEAN', 'MOUNTAIN', 'RIVER',
+      'THUNDER', 'STORM', 'RAINBOW', 'SUNSET', 'SUNRISE', 'COSMIC', 'STELLAR', 'LUNAR', 'SOLAR', 'METEOR',
+      'COMET', 'NEBULA', 'ORBIT', 'ASTRO', 'SPACE', 'SATURN', 'ECLIPSE', 'AURORA', 'CRATER', 'VOYAGE',
+      // Bahasa Inggris — sekolah & keluarga
+      'FRIEND', 'FAMILY', 'SCHOOL', 'TEACHER', 'STUDENT', 'PENCIL', 'NOTEBOOK', 'GARDEN', 'FLOWER', 'BUTTERFLY',
+      // Bahasa Inggris — petualangan & harta
+      'COURAGE', 'GENIUS', 'CHAMPION', 'VICTORY', 'TREASURE', 'ADVENTURE', 'JOURNEY', 'MYSTERY', 'PUZZLE', 'RIDDLE',
+      'GOLDEN', 'SILVER', 'CRYSTAL', 'DIAMOND', 'EMERALD', 'RUBY', 'SAPPHIRE', 'PEARL', 'AMBER', 'JADE',
+      'PIRATE', 'NINJA', 'SAMURAI', 'WARRIOR', 'HERO', 'LEGEND', 'SORCERER', 'ARCHER', 'RANGER', 'SCOUT'
+    ];
+
     function genRoomCode() {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // hindari 0/O/1/I biar gak ambigu
-      let code = '';
-      for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
-      return code;
+      return KODE_KATA_BANK[Math.floor(Math.random() * KODE_KATA_BANK.length)];
     }
     function duelExpiry() { return Timestamp.fromMillis(Date.now() + DUEL_ROOM_TTL_HOURS * 3600 * 1000); }
 
