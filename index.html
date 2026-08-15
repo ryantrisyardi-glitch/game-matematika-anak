@@ -3911,6 +3911,26 @@
     // Dipanggil sekali saat halaman dibuka: kalau nama & (opsional) sesi duel
     // sebelumnya tersimpan, langsung lewati layar isi nama dan — kalau memang
     // sedang di tengah ronde duel — lanjutkan persis dari soal terakhir.
+    // Browser memblokir audio.play() tanpa gesture pengguna (kebijakan autoplay) —
+    // gagalnya SENYAP (tidak ada error), makanya musik latar terasa "tidak berfungsi"
+    // padahal sebenarnya cuma diblokir diam-diam. submitNama() aman karena dipicu
+    // dari klik tombol; tapi alur pulihkan-sesi berjalan otomatis saat halaman dimuat
+    // (bukan dari klik), jadi musiknya perlu ditunda sampai interaksi pertama.
+    let bgMusicPendingStart = false;
+    function mulaiMusikSetelahInteraksiPertama() {
+      if (bgMusicPendingStart || bgMusic) return; // sudah terpasang / musik sudah jalan
+      bgMusicPendingStart = true;
+      const trigger = () => {
+        startBgMusic();
+        document.removeEventListener('click', trigger);
+        document.removeEventListener('touchstart', trigger);
+        document.removeEventListener('keydown', trigger);
+      };
+      document.addEventListener('click', trigger, { once: true });
+      document.addEventListener('touchstart', trigger, { once: true });
+      document.addEventListener('keydown', trigger, { once: true });
+    }
+
     async function cobaPulihkanSesiTersimpan() {
       let savedName = null;
       try { savedName = localStorage.getItem('matika_player_name'); } catch (e) { /* abaikan */ }
@@ -3921,6 +3941,7 @@
       updateDockNameBadge();
       window.__analytics?.updateVisitorName(playerName);
       document.getElementById('greeting-text').textContent = `Halo, ${playerName}! Pilih levelmu 🎉`;
+      mulaiMusikSetelahInteraksiPertama();
 
       if (pendingDuelJoinCode) {
         showScreen('screen-level');
